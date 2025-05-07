@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapbox Zoom Example</title>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #2C2C2C;
+            color: #D3D3D3;
+        }
+        #map {
+            flex: 1;
+            width: 100%;
+        }
+        #toggle-switch {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        #toggle-switch svg {
+            fill: black; /* アイコンを黒く設定 */
+        }
+        #filter-container {
+            position: absolute;
+            top: 50px; /* スイッチの下に配置 */
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            display: none; /* 初期状態で非表示 */
+        }
+        #filter-container label {
+            margin-right: 10px;
+            color: black;
+        }
+        #filter-container.compact {
+            display: flex;
+            flex-direction: column; /* 一列にまとめる */
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="toggle-switch">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+        </svg>
+    </div>
+    <div id="filter-container" class="compact">
+        <label><input type="checkbox" id="filter-tourism" checked> 観光</label>
+        <label><input type="checkbox" id="filter-accommodation" checked> 宿泊</label>
+    </div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZ2dwbGF5ZXIiLCJhIjoiY200OXBzcmI1MGR6bzJxcTFrdDJ1MGJyNSJ9.o_VpEScSsAPdt8U8PDB58Q';
+
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            projection: 'globe',
+            zoom: 4, // 日本全体が見えるズームレベル
+            center: [138, 36] // 日本の中心座標
+        });
+
+        map.addControl(new mapboxgl.NavigationControl());
+        map.on('style.load', () => {
+            map.setFog({});
+        });
+
+        // 高島市以外を雲で隠すアニメーション
+        function applyFogAnimation() {
+            // 初期状態のFog設定
+            map.setFog({
+                range: [0.5, 10], // 視界の範囲
+                color: 'white', // 雲の色
+                "horizon-blend": 0.1 // 地平線のぼかし
+            });
+
+            // GSAPでFogのアニメーションを実行
+            gsap.to(map.getFog(), {
+                duration: 2, // アニメーションの時間
+                range: [0.1, 2], // 視界を狭める
+                "horizon-blend": 0.8, // 地平線のぼかしを強くする
+                onUpdate: () => {
+                    // Fogの設定を更新
+                    map.setFog({
+                        range: gsap.getProperty(map.getFog(), "range"),
+                        color: 'white',
+                        "horizon-blend": gsap.getProperty(map.getFog(), "horizon-blend")
+                    });
+                }
+            });
+        }
+
+        // 高島市の範囲を強調する関数
+        function highlightTakasima() {
+            map.flyTo({
+                center: [135.94635242951762, 35.37786887726864], // 高島市の座標
+                zoom: 10, // 高島市が見えるズームレベル
+                pitch: 45, // 傾き
+                bearing: 0, // 回転角度
+                speed: 0.8, // ズーム速度
+                curve: 1.5 // アニメーションの曲線
+            });
+
+            // Fogアニメーションを適用
+            applyFogAnimation();
+        }
+
+        // ページ読み込み後に高島市を強調
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(highlightTakasima, 2000); // 2秒後にズームとFogアニメーションを開始
+        });
+
+        const sheetNames = ['takasima_map'];
+        const spreadsheetId = '1AZgfYRfWLtVXH7rx7BeEPmbmdy7EfnGDbAwi6bMSNsU';
+        const apiKey = 'AIzaSyAj_tQf-bp0v3j6Pl8S7HQVO5I-D5WI0GQ';
+        let data = {};
+
+        async function fetchData(sheetName) {
+            console.log('Fetching data from', sheetName);
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+                const data = await response.json();
+                data.values.shift(); // 最初の行を削除
+                return data.values;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+        async function init() {
+            const points = await fetchData(sheetNames[0]);
+            if (!points) return;
+
+            const markers = [];
+            const categories = new Map(); // カテゴリとサブカテゴリを収集するためのマップ
+
+            points.forEach(point => {
+                const [id, category, subcategory, name, latitude, longitude, description, link] = point; // スプレッドシートの列順に対応
+                const lat = parseFloat(latitude);
+                const lon = parseFloat(longitude);
+
+                if (isNaN(lat) || isNaN(lon)) {
+                    console.error(`Invalid coordinates for point: ${name}`);
+                    return; // 無効な座標はスキップ
+                }
+
+                // カテゴリとサブカテゴリをマップに追加
+                if (!categories.has(category)) {
+                    categories.set(category, new Set());
+                }
+                categories.get(category).add(subcategory);
+
+                // マーカーをMapboxのソースとして追加
+                markers.push({
+                    id,
+                    category,
+                    subcategory,
+                    coordinates: [lon, lat],
+                    properties: {
+                        name,
+                        description,
+                        link
+                    }
+                });
+            });
+
+            // Mapboxのソースとレイヤーを追加
+            map.on('load', () => {
+                map.addSource('markers', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: [] // 初期データを空に設定
+                    }
+                });
+
+                map.addLayer({
+                    id: 'marker-layer',
+                    type: 'circle',
+                    source: 'markers',
+                    paint: {
+                        'circle-radius': 6,
+                        'circle-color': '#007cbf'
+                    }
+                });
+
+                // 初期フィルタリングを実行
+                updateMarkers();
+            });
+
+            // カテゴリごとのボタンを作成
+            const filterContainer = document.getElementById('filter-container');
+            categories.forEach((subcategories, category) => {
+                const categoryLabel = document.createElement('label');
+                categoryLabel.innerHTML = `<input type="checkbox" class="category-filter" data-category="${category}" checked> ${category}`;
+                filterContainer.appendChild(categoryLabel);
+
+                // サブカテゴリごとのボタンを作成
+                subcategories.forEach(subcategory => {
+                    const subcategoryLabel = document.createElement('label');
+                    subcategoryLabel.innerHTML = `<input type="checkbox" class="subcategory-filter" data-category="${category}" data-subcategory="${subcategory}" checked> ${subcategory}`;
+                    filterContainer.appendChild(subcategoryLabel);
+                });
+            });
+
+            // フィルタリング機能
+            function updateMarkers() {
+                const activeCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(
+                    checkbox => checkbox.dataset.category
+                );
+                const activeSubcategories = Array.from(document.querySelectorAll('.subcategory-filter:checked')).map(
+                    checkbox => `${checkbox.dataset.category}:${checkbox.dataset.subcategory}`
+                );
+
+                const filteredFeatures = markers
+                    .filter(({ category, subcategory }) => {
+                        const key = `${category}:${subcategory}`;
+                        return activeCategories.includes(category) && activeSubcategories.includes(key);
+                    })
+                    .map(marker => ({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: marker.coordinates
+                        },
+                        properties: marker.properties
+                    }));
+
+                // GeoJSONデータを更新
+                const source = map.getSource('markers');
+                if (source) {
+                    source.setData({
+                        type: 'FeatureCollection',
+                        features: filteredFeatures
+                    });
+                } else {
+                    console.error("Source 'markers' is not defined.");
+                }
+            }
+
+            // カテゴリフィルタとサブカテゴリフィルタのイベントリスナーを追加
+            document.querySelectorAll('.category-filter, .subcategory-filter').forEach(checkbox => {
+                checkbox.addEventListener('change', updateMarkers);
+            });
+
+            // 初期フィルタリングを実行
+            updateMarkers();
+        }
+
+        // 高島市の外枠を描画する関数
+        function drawOuterBoundary(geojsonData) {
+            map.on('load', () => {
+                map.addLayer({
+                    id: 'takasima-outer-boundary',
+                    type: 'line',
+                    source: {
+                        type: 'geojson',
+                        data: geojsonData // 新しいGeoJSONデータを使用
+                    },
+                    layout: {},
+                    paint: {
+                        'line-color': '#FF0000', // 赤色
+                        'line-width': 3 // ラインの幅
+                    }
+                });
+            });
+        }
+
+        // GeoJSONファイルを読み込む関数
+        async function fetchBoundaryData() {
+            try {
+                const response = await fetch('./map.geojson'); // GeoJSONファイルのパス
+                if (!response.ok) {
+                    throw new Error('Failed to fetch GeoJSON data');
+                }
+                const geojsonData = await response.json();
+                drawOuterBoundary(geojsonData); // 外枠を描画
+            } catch (error) {
+                console.error('Error fetching GeoJSON data:', error);
+            }
+        }
+
+        // スイッチのクリックイベント
+        document.getElementById('toggle-switch').addEventListener('click', () => {
+            const filterContainer = document.getElementById('filter-container');
+
+            if (filterContainer.style.display === 'none' || filterContainer.style.display === '') {
+                filterContainer.style.display = 'flex'; // 表示
+            } else {
+                filterContainer.style.display = 'none'; // 非表示
+            }
+        });
+
+        // 初期化関数を呼び出す
+        fetchBoundaryData();
+
+        init();
+    </script>
+</body>
+</html>
