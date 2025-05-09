@@ -72,6 +72,15 @@
     </div>
 
     <script>
+        // 色分けのためのenums
+        const Category = {
+            TOURISM: '観光',
+            ACCOMMODATION: '宿泊',
+            MOUNTAIN: '山',
+            FOOD: '飲食',
+            SHOPPING: 'ショッピング'
+        };
+
         mapboxgl.accessToken = 'pk.eyJ1IjoiZ2dwbGF5ZXIiLCJhIjoiY200OXBzcmI1MGR6bzJxcTFrdDJ1MGJyNSJ9.o_VpEScSsAPdt8U8PDB58Q';
 
         const map = new mapboxgl.Map({
@@ -83,34 +92,6 @@
         });
 
         map.addControl(new mapboxgl.NavigationControl());
-        map.on('style.load', () => {
-            map.setFog({});
-        });
-
-        // 高島市以外を雲で隠すアニメーション
-        function applyFogAnimation() {
-            // 初期状態のFog設定
-            map.setFog({
-                range: [0.5, 10], // 視界の範囲
-                color: 'white', // 雲の色
-                "horizon-blend": 0.1 // 地平線のぼかし
-            });
-
-            // GSAPでFogのアニメーションを実行
-            gsap.to(map.getFog(), {
-                duration: 2, // アニメーションの時間
-                range: [0.1, 2], // 視界を狭める
-                "horizon-blend": 0.8, // 地平線のぼかしを強くする
-                onUpdate: () => {
-                    // Fogの設定を更新
-                    map.setFog({
-                        range: gsap.getProperty(map.getFog(), "range"),
-                        color: 'white',
-                        "horizon-blend": gsap.getProperty(map.getFog(), "horizon-blend")
-                    });
-                }
-            });
-        }
 
         // 高島市の範囲を強調する関数
         function highlightTakasima() {
@@ -122,20 +103,16 @@
                 speed: 0.8, // ズーム速度
                 curve: 1.5 // アニメーションの曲線
             });
-
-            // Fogアニメーションを適用
-            applyFogAnimation();
         }
 
         // ページ読み込み後に高島市を強調
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(highlightTakasima, 2000); // 2秒後にズームとFogアニメーションを開始
+            setTimeout(highlightTakasima, 2000); // 2秒後にズームを開始
         });
 
         const sheetNames = ['takasima_map'];
         const spreadsheetId = '1AZgfYRfWLtVXH7rx7BeEPmbmdy7EfnGDbAwi6bMSNsU';
         const apiKey = 'AIzaSyAj_tQf-bp0v3j6Pl8S7HQVO5I-D5WI0GQ';
-        let data = {};
 
         async function fetchData(sheetName) {
             console.log('Fetching data from', sheetName);
@@ -163,14 +140,16 @@
             const categories = new Set(); // メインカテゴリを収集するためのセット
 
             points.forEach(point => {
-                const [id, category, subcategory, name, place, latitude, longitude, description, link] = point; // `place`を追加
+                const [id, category, subcategory, name, place, latitude, longitude, description, link] = point;
+
+                // 空白や不正な値をスキップ
+                if (!id || !category || !name || !latitude || !longitude || isNaN(parseFloat(latitude)) || isNaN(parseFloat(longitude))) {
+                    console.warn(`Skipping invalid data: ${point}`);
+                    return;
+                }
+
                 const lat = parseFloat(latitude);
                 const lon = parseFloat(longitude);
-
-                if (isNaN(lat) || isNaN(lon)) {
-                    console.error(`Invalid coordinates for point: ${name}`);
-                    return; // 無効な座標はスキップ
-                }
 
                 // メインカテゴリをセットに追加
                 categories.add(category);
@@ -182,15 +161,16 @@
                     coordinates: [lon, lat],
                     properties: {
                         name,
-                        place, // `place`をプロパティに追加
+                        place,
                         description,
                         link
                     }
                 });
             });
 
+            console.log("Markers:", markers); // デバッグ用: マーカーの内容を確認
+
             map.on('load', () => {
-                // ソースを追加
                 map.addSource('markers', {
                     type: 'geojson',
                     data: {
@@ -201,11 +181,15 @@
                                 type: 'Point',
                                 coordinates: marker.coordinates
                             },
-                            properties: marker.properties
+                            properties: {
+                                ...marker.properties,
+                                category: marker.category // categoryを明示的に追加
+                            }
                         }))
                     }
                 });
 
+                console.log(markers)
                 // レイヤーを追加
                 map.addLayer({
                     id: 'marker-layer',
@@ -221,16 +205,42 @@
                             '山', '#3357FF',     // 山: 青
                             '飲食', '#FFD700',   // 飲食: 黄色
                             'ショッピング', '#8A2BE2', // ショッピング: 紫
-                            '#CCCCCC'            // デフォルト: グレー
+                            'gray'            // デフォルト: グレー
                         ]
                     }
+                });
+
+                // マーカークリック時にポップアップを表示
+                map.on('click', 'marker-layer', (e) => {
+                    const coordinates = e.features[0].geometry.coordinates.slice();
+                    const properties = e.features[0].properties;
+
+                    const popupContent = `
+                        <strong>${properties.name}</strong><br>
+                        ${properties.place}<br>
+                        ${properties.description}<br>
+                        <a href="${properties.link}" target="_blank">詳細を見る</a>
+                    `;
+
+                    new mapboxgl.Popup()
+                        .setLngLat(coordinates)
+                        .setHTML(popupContent)
+                        .addTo(map);
+                });
+
+                // マウスオーバー時にカーソルを変更
+                map.on('mouseenter', 'marker-layer', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+
+                map.on('mouseleave', 'marker-layer', () => {
+                    map.getCanvas().style.cursor = '';
                 });
 
                 // 初期フィルタリングを実行
                 updateMarkers();
             });
 
-            // メインカテゴリごとのボタンを作成
             const filterContainer = document.getElementById('filter-container');
             categories.forEach(category => {
                 const categoryLabel = document.createElement('label');
@@ -238,7 +248,6 @@
                 filterContainer.appendChild(categoryLabel);
             });
 
-            // フィルタリング機能
             function updateMarkers() {
                 const activeCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(
                     checkbox => checkbox.dataset.category
@@ -255,7 +264,6 @@
                         properties: marker.properties
                     }));
 
-                // GeoJSONデータを更新
                 const source = map.getSource('markers');
                 if (source) {
                     source.setData({
@@ -267,12 +275,10 @@
                 }
             }
 
-            // カテゴリフィルタのイベントリスナーを追加
             document.querySelectorAll('.category-filter').forEach(checkbox => {
                 checkbox.addEventListener('change', updateMarkers);
             });
 
-            // 初期フィルタリングを実行
             updateMarkers();
         }
 
@@ -284,45 +290,36 @@
                     type: 'line',
                     source: {
                         type: 'geojson',
-                        data: geojsonData // 新しいGeoJSONデータを使用
+                        data: geojsonData
                     },
                     layout: {},
                     paint: {
-                        'line-color': '#FF0000', // 赤色
-                        'line-width': 3 // ラインの幅
+                        'line-color': '#FF0000',
+                        'line-width': 3
                     }
                 });
             });
         }
 
-        // GeoJSONファイルを読み込む関数
         async function fetchBoundaryData() {
             try {
-                const response = await fetch('./map.geojson'); // GeoJSONファイルのパス
+                const response = await fetch('./map.geojson');
                 if (!response.ok) {
                     throw new Error('Failed to fetch GeoJSON data');
                 }
                 const geojsonData = await response.json();
-                drawOuterBoundary(geojsonData); // 外枠を描画
+                drawOuterBoundary(geojsonData);
             } catch (error) {
                 console.error('Error fetching GeoJSON data:', error);
             }
         }
 
-        // スイッチのクリックイベント
         document.getElementById('toggle-switch').addEventListener('click', () => {
             const filterContainer = document.getElementById('filter-container');
-
-            if (filterContainer.style.display === 'none' || filterContainer.style.display === '') {
-                filterContainer.style.display = 'flex'; // 表示
-            } else {
-                filterContainer.style.display = 'none'; // 非表示
-            }
+            filterContainer.style.display = filterContainer.style.display === 'none' || filterContainer.style.display === '' ? 'flex' : 'none';
         });
 
-        // 初期化関数を呼び出す
         fetchBoundaryData();
-
         init();
     </script>
 </body>
