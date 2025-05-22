@@ -36,26 +36,87 @@
             cursor: pointer;
         }
         #toggle-switch svg {
-            fill: black; /* アイコンを黒く設定 */
+            fill: black;
         }
         #filter-container {
             position: absolute;
-            top: 50px; /* スイッチの下に配置 */
+            top: 50px;
             left: 10px;
             z-index: 1000;
             background: rgba(255, 255, 255, 0.8);
             padding: 10px;
             border-radius: 5px;
-            display: none; /* 初期状態で非表示 */
+            display: flex;
         }
         #filter-container label {
             margin-right: 10px;
             color: black;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         #filter-container.compact {
             display: flex;
-            flex-direction: column; /* 一列にまとめる */
+            flex-direction: column;
             gap: 5px;
+        }
+        .category-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .popup {
+            background: white;
+            color: black;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            max-width: 200px;
+        }
+        .popup h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+        .popup p {
+            margin: 0;
+            font-size: 12px;
+        }
+        .category-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        .toggle-button {
+            padding: 4px 8px;
+            font-size: 14px;
+            background-color: #ffffff;
+            color: #333333;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-weight: 500;
+            white-space: nowrap;
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .toggle-button:hover {
+            background-color: #f0f0f0;
+            border-color: #999999;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .toggle-button:active {
+            background-color: #e0e0e0;
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -67,8 +128,7 @@
         </svg>
     </div>
     <div id="filter-container" class="compact">
-        <label><input type="checkbox" id="filter-tourism" checked> 観光</label>
-        <label><input type="checkbox" id="filter-accommodation" checked> 宿泊</label>
+        <!-- 初期表示のチェックボックスを削除 -->
     </div>
 
     <script>
@@ -124,6 +184,7 @@
                     throw new Error('Failed to fetch data');
                 }
                 const data = await response.json();
+                console.log('Raw data from spreadsheet:', data.values); // デバッグログを追加
                 data.values.shift(); // 最初の行を削除
                 return data.values;
             } catch (error) {
@@ -132,29 +193,35 @@
             }
         }
 
+        // カテゴリーごとの色とサイズを定義
+        const CATEGORY_STYLES = {
+            '山': { color: '#3357FF', size: 8 },
+            'キャンプ場': { color: '#33FF57', size: 8 },
+            '観光地名': { color: '#FF5733', size: 8 },
+            'イベント': { color: '#FFD700', size: 8 },
+            '神社': { color: '#8A2BE2', size: 8 },
+            '宿泊施設': { color: '#FF69B4', size: 8 },
+            '飲食店': { color: '#FF4500', size: 8 }
+        };
+
         async function init() {
             const points = await fetchData(sheetNames[0]);
             if (!points) return;
 
             const markers = [];
-            const categories = new Set(); // メインカテゴリを収集するためのセット
+            const categories = new Set();
 
             points.forEach(point => {
-                const [id, category, subcategory, name, place, latitude, longitude, description, link] = point;
-
-                // 空白や不正な値をスキップ
-                if (!id || !category || !name || !latitude || !longitude || isNaN(parseFloat(latitude)) || isNaN(parseFloat(longitude))) {
-                    console.warn(`Skipping invalid data: ${point}`);
-                    return;
-                }
-
+                const [id, category, subcategory, name, place, latitude, longitude, description, link] = point; // `place`を追加
                 const lat = parseFloat(latitude);
                 const lon = parseFloat(longitude);
 
-                // メインカテゴリをセットに追加
-                categories.add(category);
+                if (isNaN(lat) || isNaN(lon)) {
+                    console.error(`Invalid coordinates for point: ${name}`);
+                    return; // 無効な座標はスキップ
+                }
 
-                // マーカーをMapboxのソースとして追加
+                categories.add(category);
                 markers.push({
                     id,
                     category,
@@ -168,8 +235,6 @@
                 });
             });
 
-            console.log("Markers:", markers); // デバッグ用: マーカーの内容を確認
-
             map.on('load', () => {
                 map.addSource('markers', {
                     type: 'geojson',
@@ -181,10 +246,7 @@
                                 type: 'Point',
                                 coordinates: marker.coordinates
                             },
-                            properties: {
-                                ...marker.properties,
-                                category: marker.category // categoryを明示的に追加
-                            }
+                            properties: marker.properties
                         }))
                     }
                 });
@@ -196,7 +258,12 @@
                     type: 'circle',
                     source: 'markers',
                     paint: {
-                        'circle-radius': 6,
+                        'circle-radius': [
+                            'match',
+                            ['get', 'category'],
+                            ...Object.entries(CATEGORY_STYLES).flatMap(([cat, style]) => [cat, style.size]),
+                            6 // デフォルトサイズ
+                        ],
                         'circle-color': [
                             'match',
                             ['get', 'category'], // GeoJSONのプロパティ "category" を取得
@@ -205,7 +272,7 @@
                             '山', '#3357FF',     // 山: 青
                             '飲食', '#FFD700',   // 飲食: 黄色
                             'ショッピング', '#8A2BE2', // ショッピング: 紫
-                            'gray'            // デフォルト: グレー
+                            '#CCCCCC'            // デフォルト: グレー
                         ]
                     }
                 });
@@ -241,6 +308,7 @@
                 updateMarkers();
             });
 
+            // メインカテゴリごとのボタンを作成
             const filterContainer = document.getElementById('filter-container');
             categories.forEach(category => {
                 const categoryLabel = document.createElement('label');
@@ -248,22 +316,27 @@
                 filterContainer.appendChild(categoryLabel);
             });
 
+            // フィルタリング機能
             function updateMarkers() {
                 const activeCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(
                     checkbox => checkbox.dataset.category
                 );
 
-                const filteredFeatures = markers
-                    .filter(({ category }) => activeCategories.includes(category))
-                    .map(marker => ({
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Point',
-                            coordinates: marker.coordinates
-                        },
-                        properties: marker.properties
-                    }));
+                    const filteredFeatures = markers
+                        .filter(({ category }) => activeCategories.includes(category))
+                        .map(marker => ({
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: marker.coordinates
+                            },
+                            properties: {
+                                ...marker.properties,
+                                category: marker.category
+                            }
+                        }));
 
+                // GeoJSONデータを更新
                 const source = map.getSource('markers');
                 if (source) {
                     source.setData({
@@ -275,10 +348,12 @@
                 }
             }
 
+            // カテゴリフィルタのイベントリスナーを追加
             document.querySelectorAll('.category-filter').forEach(checkbox => {
                 checkbox.addEventListener('change', updateMarkers);
             });
 
+            // 初期フィルタリングを実行
             updateMarkers();
         }
 
