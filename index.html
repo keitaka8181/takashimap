@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapbox Zoom Example</title>
+    <link rel="icon" type="image/png" href="takashi_icon003.png">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -37,6 +38,24 @@
         }
         #toggle-switch svg {
             fill: black;
+        }
+        #logo {
+            position: absolute;
+            top: 10px;
+            left: 60px;  /* メニューボタンの右側に配置 */
+            z-index: 1000;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #logo img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
         }
         #filter-container {
             position: absolute;
@@ -126,6 +145,9 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
             <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
         </svg>
+    </div>
+    <div id="logo">
+        <img src="takashi_icon003.png" alt="高島ロゴ">
     </div>
     <div id="filter-container" class="compact">
         <!-- 初期表示のチェックボックスを削除 -->
@@ -220,7 +242,7 @@
         const CATEGORY_STYLES = {
             '山': { color: '#3357FF', size: 8 },
             'キャンプ場': { color: '#33FF57', size: 8 },
-            '観光地名': { color: '#FF5733', size: 8 },
+            '観光地名': { color: 'black', size: 8 },
             'イベント': { color: '#FFD700', size: 8 },
             '神社': { color: '#8A2BE2', size: 8 },
             '宿泊施設': { color: '#FF69B4', size: 8 },
