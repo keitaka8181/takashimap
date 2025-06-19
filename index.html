@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapbox Zoom Example</title>
-    <link rel="icon" type="image/png" href="takashi_icon003.png">
+    <link rel="icon" type="image/png" href="image.png">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -22,40 +22,19 @@
             flex: 1;
             width: 100%;
         }
-        #toggle-switch {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            cursor: pointer;
-        }
-        #toggle-switch svg {
-            fill: black;
-        }
         #logo {
             position: absolute;
             top: 10px;
-            left: 60px;  /* メニューボタンの右側に配置 */
+            right: 60px;
             z-index: 1000;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         #logo img {
-            width: 32px;
-            height: 32px;
+            width: 150px;
+            height: auto;
             object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
         }
         #filter-container {
             position: absolute;
@@ -66,6 +45,10 @@
             padding: 10px;
             border-radius: 5px;
             display: flex;
+            transition: transform 0.3s ease;
+        }
+        #filter-container.hidden {
+            transform: translateX(-100%);
         }
         #filter-container label {
             margin-right: 10px;
@@ -78,6 +61,36 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
+        }
+        #toggle-arrow {
+            position: absolute;
+            top: 190px;
+            left: 220px;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        #toggle-arrow:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+        #toggle-arrow svg {
+            width: 16px;
+            height: 16px;
+            fill: #333;
+            transition: transform 0.3s ease;
+        }
+        #toggle-arrow.collapsed svg {
+            transform: rotate(180deg);
         }
         .category-color {
             width: 12px;
@@ -103,14 +116,22 @@
             font-size: 12px;
         }
         .category-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr auto;
             align-items: center;
             gap: 8px;
             padding: 4px 0;
+            min-width: 150px;
+        }
+        .category-row label {
+            display: block;
+            width: auto;
+            text-align: left;
         }
         .toggle-button {
-            padding: 4px 8px;
-            font-size: 14px;
+            justify-self: end;
+            padding: 0 8px;
+            font-size: 18px;
             background-color: #ffffff;
             color: #333333;
             border: 1px solid #cccccc;
@@ -119,12 +140,12 @@
             transition: all 0.3s ease;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             font-weight: 500;
-            white-space: nowrap;
             min-width: 32px;
             height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
+            vertical-align: middle;
         }
         .toggle-button:hover {
             background-color: #f0f0f0;
@@ -137,20 +158,109 @@
             transform: translateY(0);
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
+        #info-popup {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            width: 300px;
+            max-height: 80vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1002;
+            display: none;
+            overflow-y: auto;
+            color: #333;
+        }
+        #info-popup.show {
+            display: block;
+        }
+        #info-popup-header {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+        }
+        #info-popup-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        #info-popup-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #info-popup-close:hover {
+            color: #333;
+        }
+        #info-popup-content {
+            padding: 15px;
+        }
+        .info-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .info-item:hover {
+            background-color: #f5f5f5;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-item h4 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: #333;
+        }
+        .info-item p {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .info-item .place {
+            font-weight: bold;
+            color: #555;
+        }
+        .info-item .description {
+            margin-top: 5px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <div id="toggle-switch">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
-        </svg>
-    </div>
     <div id="logo">
-        <img src="takashi_icon003.png" alt="高島ロゴ">
+        <img src="image.png" alt="高島ロゴ">
     </div>
     <div id="filter-container" class="compact">
         <!-- 初期表示のチェックボックスを削除 -->
+    </div>
+    <button id="toggle-arrow" title="カテゴリーを表示/非表示">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+        </svg>
+    </button>
+    <div id="info-popup">
+        <div id="info-popup-header">
+            <h3 id="info-popup-title">カテゴリー情報</h3>
+            <button id="info-popup-close">×</button>
+        </div>
+        <div id="info-popup-content">
+            <!-- 情報がここに動的に追加されます -->
+        </div>
     </div>
 
     <script>
@@ -218,6 +328,8 @@
         const spreadsheetId = '1AZgfYRfWLtVXH7rx7BeEPmbmdy7EfnGDbAwi6bMSNsU';
         const apiKey = 'AIzaSyAj_tQf-bp0v3j6Pl8S7HQVO5I-D5WI0GQ';
         let data = {};
+        let markers = []; // グローバル変数として定義
+        let categories = new Set(); // グローバル変数として定義
 
         async function fetchData(sheetName) {
             console.log('Fetching data from', sheetName);
@@ -253,8 +365,9 @@
             const points = await fetchData(sheetNames[0]);
             if (!points) return;
 
-            const markers = [];
-            const categories = new Set();
+            // グローバル変数をクリア
+            markers = [];
+            categories.clear();
 
             points.forEach(point => {
                 const [id, category, subcategory, name, place, latitude, longitude, description, link] = point;
@@ -462,6 +575,9 @@
                             });
                             toggleButton.title = '全表示';
                             isSoloMode = true;
+                            
+                            // 情報ポップアップを表示
+                            showCategoryInfo(currentCategory);
                         } else {
                             // 全表示モードに切り替え
                             checkboxes.forEach(checkbox => {
@@ -469,6 +585,9 @@
                             });
                             toggleButton.title = 'これだけ表示';
                             isSoloMode = false;
+                            
+                            // 情報ポップアップを非表示
+                            hideInfoPopup();
                         }
                         
                         updateMarkers();
@@ -554,16 +673,67 @@
             }
         }
 
-        // スイッチのクリックイベント
-        document.getElementById('toggle-switch').addEventListener('click', () => {
+        // 矢印ボタンのクリックイベント
+        document.getElementById('toggle-arrow').addEventListener('click', () => {
             const filterContainer = document.getElementById('filter-container');
-
-            if (filterContainer.style.display === 'none' || filterContainer.style.display === '') {
-                filterContainer.style.display = 'flex'; // 表示
+            const toggleArrow = document.getElementById('toggle-arrow');
+            
+            filterContainer.classList.toggle('hidden');
+            toggleArrow.classList.toggle('collapsed');
+            
+            // 矢印ボタンの位置も調整
+            if (filterContainer.classList.contains('hidden')) {
+                toggleArrow.style.left = '20px'; // カテゴリー欄が隠れた時の位置
             } else {
-                filterContainer.style.display = 'none'; // 非表示
+                toggleArrow.style.left = '220px'; // カテゴリー欄が表示された時の位置
             }
         });
+
+        // 情報ポップアップを表示する関数
+        function showCategoryInfo(category) {
+            const infoPopup = document.getElementById('info-popup');
+            const infoPopupTitle = document.getElementById('info-popup-title');
+            const infoPopupContent = document.getElementById('info-popup-content');
+            
+            // タイトルを更新
+            infoPopupTitle.textContent = `${category}の情報`;
+            
+            // カテゴリーに該当するマーカーをフィルタリング
+            const categoryMarkers = markers.filter(marker => marker.category === category);
+            
+            // コンテンツを生成
+            let contentHTML = '';
+            categoryMarkers.forEach(marker => {
+                contentHTML += `
+                    <div class="info-item" onclick="flyToMarker(${marker.coordinates[0]}, ${marker.coordinates[1]})">
+                        <h4>${marker.properties.name}</h4>
+                        ${marker.properties.place ? `<p class="place">${marker.properties.place}</p>` : ''}
+                        ${marker.properties.description ? `<p class="description">${marker.properties.description}</p>` : ''}
+                    </div>
+                `;
+            });
+            
+            infoPopupContent.innerHTML = contentHTML;
+            infoPopup.classList.add('show');
+        }
+
+        // 情報ポップアップを非表示にする関数
+        function hideInfoPopup() {
+            const infoPopup = document.getElementById('info-popup');
+            infoPopup.classList.remove('show');
+        }
+
+        // マーカーに飛ぶ関数
+        function flyToMarker(lon, lat) {
+            map.flyTo({
+                center: [lon, lat],
+                zoom: 15,
+                speed: 1.2
+            });
+        }
+
+        // ポップアップの閉じるボタンのイベントリスナー
+        document.getElementById('info-popup-close').addEventListener('click', hideInfoPopup);
 
         // 初期化関数を呼び出す
         fetchBoundaryData();
