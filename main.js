@@ -20,14 +20,64 @@ map.addControl(new mapboxgl.NavigationControl());
 let boundaryLoaded = false;
 map.on('style.load', () => {
     map.setFog({});
-    // ボーダーラインのGeoJSONが未ロードならfetch
-    if (!boundaryLoaded) {
-        fetchBoundaryData();
-        boundaryLoaded = true;
-    } else if (window.boundaryGeoJson) {
-        drawOuterBoundary(window.boundaryGeoJson);
+    // アイコンとレイヤーを再登録
+    loadIconsAndAddLayer();
+    if (boundaryGeoJson) {
+        drawOuterBoundary(boundaryGeoJson);
     }
 });
+
+function loadIconsAndAddLayer() {
+    const iconFiles = [
+        { name: 'mountain-icon', url: 'mountain.png' },
+        { name: 'camp-icon', url: 'camp.png' },
+        { name: 'kankochi-icon', url: 'kankochi.png' },
+        { name: 'event-icon', url: 'event.png' },
+        { name: 'shrine-icon', url: 'shrine.png' },
+        { name: 'hotel-icon', url: 'hotel.png' },
+        { name: 'food-icon', url: 'food.png' }
+    ];
+    let loaded = 0;
+    iconFiles.forEach(icon => {
+        map.loadImage(icon.url, (error, image) => {
+            if (!error && !map.hasImage(icon.name)) {
+                map.addImage(icon.name, image);
+            }
+            loaded++;
+            if (loaded === iconFiles.length) {
+                // ソースとレイヤーを再追加
+                if (!map.getSource('markers')) {
+                    map.addSource('markers', { type: 'geojson', data: lastMarkersGeoJson });
+                } else {
+                    map.getSource('markers').setData(lastMarkersGeoJson);
+                }
+                if (!map.getLayer('marker-layer')) {
+                    map.addLayer({
+                        id: 'marker-layer',
+                        type: 'symbol',
+                        source: 'markers',
+                        layout: {
+                            'icon-image': [
+                                'match',
+                                ['get', 'category'],
+                                '山', 'mountain-icon',
+                                'キャンプ場', 'camp-icon',
+                                '観光地名', 'kankochi-icon',
+                                'イベント', 'event-icon',
+                                '神社', 'shrine-icon',
+                                '宿泊施設', 'hotel-icon',
+                                '飲食店', 'food-icon',
+                                'default-icon'
+                            ],
+                            'icon-size': 0.2,
+                            'icon-allow-overlap': true
+                        }
+                    });
+                }
+            }
+        });
+    });
+}
 
 // 高島市以外を雲で隠すアニメーション
 function applyFogAnimation() {
@@ -350,14 +400,18 @@ function drawOuterBoundary(geojsonData) {
     });
 }
 
+// 初回ロード時に必ず境界データを取得
+fetchBoundaryData();
+
 // GeoJSONファイルを読み込む関数
 async function fetchBoundaryData() {
     try {
         const response = await fetch('./map.geojson');
         if (!response.ok) throw new Error('Failed to fetch GeoJSON data');
         const geojsonData = await response.json();
-        window.boundaryGeoJson = geojsonData;
-        drawOuterBoundary(window.boundaryGeoJson);
+        boundaryGeoJson = geojsonData;
+        window.boundaryGeoJson = geojsonData; // どちらでも参照できるように
+        drawOuterBoundary(boundaryGeoJson);
     } catch (error) {
         console.error('Error fetching GeoJSON data:', error);
     }
@@ -424,46 +478,6 @@ basemapToggle.addEventListener('change', () => {
     } else {
         map.setStyle(STREETS_STYLE);
         basemapLabel.textContent = '標準地図';
-    }
-});
-
-map.on('style.load', () => {
-    map.setFog({});
-    if (boundaryGeoJson) {
-        drawOuterBoundary(boundaryGeoJson);
-    }
-    if (lastMarkersGeoJson) {
-        if (!map.getSource('markers')) {
-            map.addSource('markers', {
-                type: 'geojson',
-                data: lastMarkersGeoJson
-            });
-        } else {
-            map.getSource('markers').setData(lastMarkersGeoJson);
-        }
-        if (!map.getLayer('marker-layer')) {
-            map.addLayer({
-                id: 'marker-layer',
-                type: 'symbol',
-                source: 'markers',
-                layout: {
-                    'icon-image': [
-                        'match',
-                        ['get', 'category'],
-                        '山', 'mountain-icon',
-                        'キャンプ場', 'camp-icon',
-                        '観光地名', 'kankochi-icon',
-                        'イベント', 'event-icon',
-                        '神社', 'shrine-icon',
-                        '宿泊施設', 'hotel-icon',
-                        '飲食店', 'food-icon',
-                        'default-icon'
-                    ],
-                    'icon-size': 0.5,
-                    'icon-allow-overlap': true
-                }
-            });
-        }
     }
 });
 
