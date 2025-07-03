@@ -40,39 +40,63 @@ function loadIconsAndAddLayer() {
     let loaded = 0;
     iconFiles.forEach(icon => {
         map.loadImage(icon.url, (error, image) => {
-            if (!error && !map.hasImage(icon.name)) {
-                map.addImage(icon.name, image);
+            if (error) {
+                console.error(`❌ 画像の読み込み失敗: ${icon.url}`, error);
+            } else {
+                if (!map.hasImage(icon.name)) {
+                    try {
+                        map.addImage(icon.name, image);
+                        console.log(`✅ 画像登録: ${icon.name} (${icon.url})`);
+                    } catch (e) {
+                        console.error(`❌ addImage失敗: ${icon.name}`, e);
+                    }
+                } else {
+                    console.log(`ℹ️ 既に登録済み: ${icon.name}`);
+                }
             }
             loaded++;
             if (loaded === iconFiles.length) {
                 // ソースとレイヤーを再追加
-                if (!map.getSource('markers')) {
-                    map.addSource('markers', { type: 'geojson', data: lastMarkersGeoJson });
-                } else {
-                    map.getSource('markers').setData(lastMarkersGeoJson);
+                try {
+                    if (!map.getSource('markers')) {
+                        map.addSource('markers', { type: 'geojson', data: lastMarkersGeoJson });
+                        console.log('✅ markersソース追加');
+                    } else {
+                        map.getSource('markers').setData(lastMarkersGeoJson);
+                        console.log('ℹ️ markersソース更新');
+                    }
+                } catch (e) {
+                    console.error('❌ markersソース追加/更新失敗', e);
                 }
-                if (!map.getLayer('marker-layer')) {
-                    map.addLayer({
-                        id: 'marker-layer',
-                        type: 'symbol',
-                        source: 'markers',
-                        layout: {
-                            'icon-image': [
-                                'match',
-                                ['get', 'category'],
-                                '山', 'mountain-icon',
-                                'キャンプ場', 'camp-icon',
-                                '観光地名', 'kankochi-icon',
-                                'イベント', 'event-icon',
-                                '神社', 'shrine-icon',
-                                '宿泊施設', 'hotel-icon',
-                                '飲食店', 'food-icon',
-                                'default-icon'
-                            ],
-                            'icon-size': 0.2,
-                            'icon-allow-overlap': true
-                        }
-                    });
+                try {
+                    if (!map.getLayer('marker-layer')) {
+                        map.addLayer({
+                            id: 'marker-layer',
+                            type: 'symbol',
+                            source: 'markers',
+                            layout: {
+                                'icon-image': [
+                                    'match',
+                                    ['get', 'category'],
+                                    '山', 'mountain-icon',
+                                    'キャンプ場', 'camp-icon',
+                                    '観光地名', 'kankochi-icon',
+                                    'イベント', 'event-icon',
+                                    '神社', 'shrine-icon',
+                                    '宿泊施設', 'hotel-icon',
+                                    '飲食店', 'food-icon',
+                                    'default-icon'
+                                ],
+                                'icon-size': 0.4,
+                                'icon-allow-overlap': true
+                            }
+                        });
+                        console.log('✅ marker-layer追加');
+                    } else {
+                        console.log('ℹ️ marker-layerは既に存在');
+                    }
+                } catch (e) {
+                    console.error('❌ marker-layer追加失敗', e);
                 }
             }
         });
@@ -233,7 +257,7 @@ async function init() {
                         '飲食店', 'food-icon',
                         'default-icon'
                     ],
-                    'icon-size': 0.4,
+                    'icon-size': 0.2,
                     'icon-allow-overlap': true
                 }
             });
