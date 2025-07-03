@@ -322,78 +322,74 @@ async function init() {
 
         const filterContainer = document.getElementById('filter-container');
         filterContainer.innerHTML = '';
-        Array.from(categories).forEach(category => {
+        // すべてのカテゴリー名を取得
+        const allCategories = Array.from(categories);
+        // ALLボタンを追加
+        const allRow = document.createElement('div');
+        allRow.className = 'category-row';
+        const allButton = document.createElement('button');
+        allButton.className = 'category-button';
+        allButton.innerHTML = `<span>ALL</span>`;
+        allButton.title = '全て非表示/全て表示';
+        allButton.dataset.category = '__ALL__';
+        allButton.dataset.active = 'false';
+        allButton.onclick = (e) => {
+            e.preventDefault();
+            const categoryButtons = document.querySelectorAll('.category-button');
+            if (!allButton.classList.contains('active')) {
+                // ALL ON: すべて非表示
+                categoryButtons.forEach(btn => {
+                    if (btn !== allButton) btn.classList.remove('active');
+                    btn.dataset.active = 'false';
+                });
+                allButton.classList.add('active');
+                allButton.dataset.active = 'true';
+            } else {
+                // ALL OFF: すべて表示
+                categoryButtons.forEach(btn => {
+                    if (btn !== allButton) btn.classList.add('active');
+                    btn.dataset.active = 'true';
+                });
+                allButton.classList.remove('active');
+                allButton.dataset.active = 'false';
+            }
+            updateMarkers();
+        };
+        allRow.appendChild(allButton);
+        filterContainer.appendChild(allRow);
+
+        allCategories.forEach(category => {
             const style = CATEGORY_STYLES[category] || { color: '#CCCCCC', size: 6, icon: 'default.png' };
             const categoryRow = document.createElement('div');
             categoryRow.className = 'category-row';
-            
-            const categoryLabel = document.createElement('label');
-            categoryLabel.innerHTML = `
-                <input type="checkbox" class="category-filter" data-category="${category}" checked>
-                <span class="category-color" style="background-color: ${style.color}"></span>
-            `;
-            
             const categoryButton = document.createElement('button');
-            categoryButton.className = 'category-button';
+            categoryButton.className = 'category-button active'; // 最初はON
             categoryButton.innerHTML = `
                 <img src="${style.icon}" alt="${category}" class="category-icon">
                 <span>${category}</span>
             `;
-            categoryButton.title = 'カテゴリー情報を表示';
-            let isSoloMode = false;
-            
+            categoryButton.title = '表示ON/OFF';
+            categoryButton.dataset.category = category;
+            categoryButton.dataset.active = 'true';
             categoryButton.onclick = (e) => {
                 e.preventDefault();
-                const checkboxes = document.querySelectorAll('.category-filter');
-                const currentCategory = category;
-                
-                if (!isSoloMode) {
-                    // 単一表示モードに切り替え
-                    checkboxes.forEach(checkbox => {
-                        checkbox.checked = (checkbox.dataset.category === currentCategory);
-                    });
-                    categoryButton.classList.add('active');
-                    isSoloMode = true;
-                    showCategoryInfo(currentCategory);
+                // ON/OFF切り替え
+                const isActive = categoryButton.classList.toggle('active');
+                categoryButton.dataset.active = isActive ? 'true' : 'false';
+                // ALLボタンの状態を制御
+                const allButton = document.querySelector('.category-button[data-category="__ALL__"]');
+                const activeCount = document.querySelectorAll('.category-button.active:not([data-category="__ALL__"])').length;
+                if (activeCount === 0) {
+                    allButton.classList.add('active');
+                    allButton.dataset.active = 'true';
                 } else {
-                    // 全表示モードに切り替え
-                    checkboxes.forEach(checkbox => { 
-                        checkbox.checked = true; 
-                    });
-                    categoryButton.classList.remove('active');
-                    isSoloMode = false;
-                    hideInfoPopup();
+                    allButton.classList.remove('active');
+                    allButton.dataset.active = 'false';
                 }
                 updateMarkers();
             };
-            
-            categoryRow.appendChild(categoryLabel);
             categoryRow.appendChild(categoryButton);
             filterContainer.appendChild(categoryRow);
-        });
-
-        function updateMarkers() {
-            const activeCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(
-                checkbox => checkbox.dataset.category
-            );
-            const filteredFeatures = markers
-                .filter(({ category }) => activeCategories.includes(category))
-                .map(marker => ({
-                    type: 'Feature',
-                    geometry: { type: 'Point', coordinates: marker.coordinates },
-                    properties: { ...marker.properties, category: marker.category }
-                }));
-            const source = map.getSource('markers');
-            if (source) {
-                source.setData({
-                    type: 'FeatureCollection',
-                    features: filteredFeatures
-                });
-            }
-        }
-
-        document.querySelectorAll('.category-filter').forEach(checkbox => {
-            checkbox.addEventListener('change', updateMarkers);
         });
         updateMarkers();
     });
@@ -504,6 +500,41 @@ basemapToggle.addEventListener('change', () => {
         basemapLabel.textContent = '標準地図';
     }
 });
+
+// マーカーの表示を更新する関数
+function updateMarkers() {
+    const allButton = document.querySelector('.category-button[data-category="__ALL__"]');
+    const categoryButtons = Array.from(document.querySelectorAll('.category-button:not([data-category="__ALL__"])'));
+    const activeCategories = categoryButtons.filter(btn => btn.classList.contains('active')).map(btn => btn.dataset.category);
+    let filteredFeatures;
+    if (allButton && allButton.classList.contains('active')) {
+        // ALLがON: すべて非表示
+        filteredFeatures = [];
+    } else if (activeCategories.length === 0) {
+        // すべてOFF: 全部表示
+        filteredFeatures = markers.map(marker => ({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: marker.coordinates },
+            properties: { ...marker.properties, category: marker.category }
+        }));
+    } else {
+        // ONのものだけ表示
+        filteredFeatures = markers
+            .filter(({ category }) => activeCategories.includes(category))
+            .map(marker => ({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: marker.coordinates },
+                properties: { ...marker.properties, category: marker.category }
+            }));
+    }
+    const source = map.getSource('markers');
+    if (source) {
+        source.setData({
+            type: 'FeatureCollection',
+            features: filteredFeatures
+        });
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     init();
