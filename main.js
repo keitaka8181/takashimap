@@ -86,14 +86,39 @@ async function fetchData(sheetName) {
 }
 
 const CATEGORY_STYLES = {
-    '山': { color: '#3357FF', size: 8 },
-    'キャンプ場': { color: '#33FF57', size: 8 },
-    '観光地名': { color: 'black', size: 8 },
-    'イベント': { color: '#FFD700', size: 8 },
-    '神社': { color: '#8A2BE2', size: 8 },
-    '宿泊施設': { color: '#FF69B4', size: 8 },
-    '飲食店': { color: '#FF4500', size: 8 }
+    '山': { color: '#3357FF', size: 8, icon: 'mountain.png' },
+    'キャンプ場': { color: '#33FF57', size: 8, icon: 'camp.png' },
+    '観光地名': { color: 'black', size: 8, icon: 'kankochi.png' },
+    'イベント': { color: '#FFD700', size: 8, icon: 'event.png' },
+    '神社': { color: '#8A2BE2', size: 8, icon: 'shrine.png' },
+    '宿泊施設': { color: '#FF69B4', size: 8, icon: 'hotel.png' },
+    '飲食店': { color: '#FF4500', size: 8, icon: 'food.png' }
 };
+
+// アイコンを読み込む関数
+function loadIcons() {
+    const iconFiles = [
+        { name: 'mountain-icon', url: 'mountain.png' },
+        { name: 'camp-icon', url: 'camp.png' },
+        { name: 'kankochi-icon', url: 'kankochi.png' },
+        { name: 'event-icon', url: 'event.png' },
+        { name: 'shrine-icon', url: 'shrine.png' },
+        { name: 'hotel-icon', url: 'hotel.png' },
+        { name: 'food-icon', url: 'food.png' }
+    ];
+
+    iconFiles.forEach(icon => {
+        map.loadImage(icon.url, (error, image) => {
+            if (error) {
+                console.error(`Error loading icon ${icon.url}:`, error);
+                return;
+            }
+            if (!map.hasImage(icon.name)) {
+                map.addImage(icon.name, image);
+            }
+        });
+    });
+}
 
 async function init() {
     const points = await fetchData(sheetNames[0]);
@@ -131,31 +156,35 @@ async function init() {
     };
 
     map.on('load', () => {
+        // アイコンを読み込む
+        loadIcons();
+        
         if (!map.getSource('markers')) {
             map.addSource('markers', { type: 'geojson', data: lastMarkersGeoJson });
         } else {
             map.getSource('markers').setData(lastMarkersGeoJson);
         }
+        
         if (!map.getLayer('marker-layer')) {
             map.addLayer({
                 id: 'marker-layer',
-                type: 'circle',
+                type: 'symbol',
                 source: 'markers',
-                paint: {
-                    'circle-radius': [
+                layout: {
+                    'icon-image': [
                         'match',
                         ['get', 'category'],
-                        ...Object.entries(CATEGORY_STYLES).flatMap(([cat, style]) => [cat, style.size]),
-                        6
+                        '山', 'mountain-icon',
+                        'キャンプ場', 'camp-icon',
+                        '観光地名', 'kankochi-icon',
+                        'イベント', 'event-icon',
+                        '神社', 'shrine-icon',
+                        '宿泊施設', 'hotel-icon',
+                        '飲食店', 'food-icon',
+                        'default-icon'
                     ],
-                    'circle-color': [
-                        'match',
-                        ['get', 'category'],
-                        ...Object.entries(CATEGORY_STYLES).flatMap(([cat, style]) => [cat, style.color]),
-                        '#CCCCCC'
-                    ],
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': '#FFFFFF'
+                    'icon-size': 0.2,
+                    'icon-allow-overlap': true
                 }
             });
         }
@@ -220,41 +249,52 @@ async function init() {
         const filterContainer = document.getElementById('filter-container');
         filterContainer.innerHTML = '';
         Array.from(categories).forEach(category => {
-            const style = CATEGORY_STYLES[category] || { color: '#CCCCCC', size: 6 };
+            const style = CATEGORY_STYLES[category] || { color: '#CCCCCC', size: 6, icon: 'default.png' };
             const categoryRow = document.createElement('div');
             categoryRow.className = 'category-row';
+            
             const categoryLabel = document.createElement('label');
             categoryLabel.innerHTML = `
                 <input type="checkbox" class="category-filter" data-category="${category}" checked>
                 <span class="category-color" style="background-color: ${style.color}"></span>
-                ${category}
             `;
-            const toggleButton = document.createElement('button');
-            toggleButton.className = 'toggle-button';
-            toggleButton.innerHTML = '🔍';
-            toggleButton.title = 'これだけ表示';
+            
+            const categoryButton = document.createElement('button');
+            categoryButton.className = 'category-button';
+            categoryButton.innerHTML = `
+                <img src="${style.icon}" alt="${category}" class="category-icon">
+                <span>${category}</span>
+            `;
+            categoryButton.title = 'カテゴリー情報を表示';
             let isSoloMode = false;
-            toggleButton.onclick = (e) => {
+            
+            categoryButton.onclick = (e) => {
                 e.preventDefault();
                 const checkboxes = document.querySelectorAll('.category-filter');
                 const currentCategory = category;
+                
                 if (!isSoloMode) {
+                    // 単一表示モードに切り替え
                     checkboxes.forEach(checkbox => {
                         checkbox.checked = (checkbox.dataset.category === currentCategory);
                     });
-                    toggleButton.title = '全表示';
+                    categoryButton.classList.add('active');
                     isSoloMode = true;
                     showCategoryInfo(currentCategory);
                 } else {
-                    checkboxes.forEach(checkbox => { checkbox.checked = true; });
-                    toggleButton.title = 'これだけ表示';
+                    // 全表示モードに切り替え
+                    checkboxes.forEach(checkbox => { 
+                        checkbox.checked = true; 
+                    });
+                    categoryButton.classList.remove('active');
                     isSoloMode = false;
                     hideInfoPopup();
                 }
                 updateMarkers();
             };
+            
             categoryRow.appendChild(categoryLabel);
-            categoryRow.appendChild(toggleButton);
+            categoryRow.appendChild(categoryButton);
             filterContainer.appendChild(categoryRow);
         });
 
@@ -404,23 +444,23 @@ map.on('style.load', () => {
         if (!map.getLayer('marker-layer')) {
             map.addLayer({
                 id: 'marker-layer',
-                type: 'circle',
+                type: 'symbol',
                 source: 'markers',
-                paint: {
-                    'circle-radius': [
+                layout: {
+                    'icon-image': [
                         'match',
                         ['get', 'category'],
-                        ...Object.entries(CATEGORY_STYLES).flatMap(([cat, style]) => [cat, style.size]),
-                        6
+                        '山', 'mountain-icon',
+                        'キャンプ場', 'camp-icon',
+                        '観光地名', 'kankochi-icon',
+                        'イベント', 'event-icon',
+                        '神社', 'shrine-icon',
+                        '宿泊施設', 'hotel-icon',
+                        '飲食店', 'food-icon',
+                        'default-icon'
                     ],
-                    'circle-color': [
-                        'match',
-                        ['get', 'category'],
-                        ...Object.entries(CATEGORY_STYLES).flatMap(([cat, style]) => [cat, style.color]),
-                        '#CCCCCC'
-                    ],
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': '#FFFFFF'
+                    'icon-size': 0.5,
+                    'icon-allow-overlap': true
                 }
             });
         }
