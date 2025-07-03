@@ -233,7 +233,7 @@ async function init() {
                         '飲食店', 'food-icon',
                         'default-icon'
                     ],
-                    'icon-size': 0.2,
+                    'icon-size': 0.4,
                     'icon-allow-overlap': true
                 }
             });
