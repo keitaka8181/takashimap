@@ -87,7 +87,7 @@ function loadIconsAndAddLayer() {
                                     '飲食店', 'food-icon',
                                     'default-icon'
                                 ],
-                                'icon-size': 0.4,
+                                'icon-size': 0.2,
                                 'icon-allow-overlap': true
                             }
                         });
