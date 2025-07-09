@@ -494,7 +494,7 @@ const basemapLabel = document.getElementById('basemap-label');
 basemapToggle.addEventListener('change', () => {
     if (basemapToggle.checked) {
         map.setStyle(SATELLITE_STYLE);
-        basemapLabel.textContent = 'サテライト';
+        basemapLabel.textContent = '衛星画像';
     } else {
         map.setStyle(STREETS_STYLE);
         basemapLabel.textContent = '標準地図';
@@ -535,6 +535,84 @@ function updateMarkers() {
         });
     }
 }
+
+// 検索UIの表示・非表示
+const searchToggle = document.getElementById('search-toggle');
+const searchBox = document.getElementById('search-box');
+const searchIconBtn = document.getElementById('search-icon-btn');
+const searchCloseBtn = document.getElementById('search-close-btn');
+const searchInput = document.getElementById('search-input');
+const searchCategory = document.getElementById('search-category');
+const searchResults = document.getElementById('search-results');
+
+// 検索ボックスを開く
+searchIconBtn.addEventListener('click', () => {
+    searchBox.classList.remove('hidden');
+    searchInput.focus();
+});
+// 閉じる
+searchCloseBtn.addEventListener('click', () => {
+    searchBox.classList.add('hidden');
+    searchInput.value = '';
+    searchResults.innerHTML = '';
+});
+
+// カテゴリーリストを動的にセット
+function updateSearchCategoryOptions() {
+    // markers, categoriesはグローバル
+    searchCategory.innerHTML = '<option value="">すべてのカテゴリー</option>';
+    Array.from(categories).forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        searchCategory.appendChild(option);
+    });
+}
+
+// 検索処理
+function doSearch() {
+    const keyword = searchInput.value.trim().toLowerCase();
+    const cat = searchCategory.value;
+    let filtered = markers;
+    if (cat) {
+        filtered = filtered.filter(m => m.category === cat);
+    }
+    if (keyword) {
+        filtered = filtered.filter(m =>
+            (m.properties.name && m.properties.name.toLowerCase().includes(keyword)) ||
+            (m.properties.place && m.properties.place.toLowerCase().includes(keyword)) ||
+            (m.properties.description && m.properties.description.toLowerCase().includes(keyword))
+        );
+    }
+    // 結果表示
+    searchResults.innerHTML = '';
+    if (filtered.length === 0) {
+        searchResults.innerHTML = '<div style="color:#888;padding:8px;">該当なし</div>';
+        return;
+    }
+    filtered.forEach(marker => {
+        const div = document.createElement('div');
+        div.className = 'search-result-item';
+        div.innerHTML = `<strong>${marker.properties.name}</strong><br><span style="font-size:12px;color:#666;">${marker.category}${marker.properties.place ? ' / ' + marker.properties.place : ''}</span>`;
+        div.onclick = () => {
+            flyToMarker(marker.coordinates[0], marker.coordinates[1]);
+            searchBox.classList.add('hidden');
+        };
+        searchResults.appendChild(div);
+    });
+}
+
+// 入力イベント
+searchInput.addEventListener('input', doSearch);
+searchCategory.addEventListener('change', doSearch);
+
+// カテゴリーリスト初期化・更新
+// markers/categoriesが初期化された後(initの最後)で呼ぶ
+const _origInit = init;
+init = async function() {
+    await _origInit.apply(this, arguments);
+    updateSearchCategoryOptions();
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     init();

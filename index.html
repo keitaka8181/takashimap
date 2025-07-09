@@ -39,6 +39,33 @@
       </label>
       <span id="basemap-label" style="margin-left:10px;">衛星画像</span>
     </div>
+    <div id="search-toggle" title="検索" style="position:absolute;top:10px;right:10px;z-index:1200;">
+        <button id="search-icon-btn" style="background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;">
+            <svg width="20" height="20" fill="#333" viewBox="0 0 20 20">
+                <circle cx="9" cy="9" r="7" stroke="#333" stroke-width="2" fill="none"/>
+                <line x1="14" y1="14" x2="19" y2="19" stroke="#333" stroke-width="2"/>
+            </svg>
+            <span id="search-label" class="search-label">検索</span>
+        </button>
+    </div>
+    <div id="search-box" class="hidden" style="right:10px;left:auto;">
+        <div class="search-box-inner">
+            <input type="text" id="search-input" placeholder="キーワードで検索" autocomplete="off">
+            <select id="search-category">
+                <option value="">すべてのカテゴリー</option>
+                <!-- カテゴリーはJSで動的に追加 -->
+            </select>
+            <button id="search-close-btn" title="閉じる">×</button>
+        </div>
+        <div id="search-results"></div>
+    </div>
     <script src="main.js"></script>
+    <style>
+      /* Mapboxデフォルトのコントロールを非表示にする */
+      .mapboxgl-ctrl-top-left,
+      .mapboxgl-ctrl-group {
+        display: none !important;
+      }
+    </style>
 </body>
 </html>
