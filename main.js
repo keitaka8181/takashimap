@@ -35,7 +35,15 @@ function loadIconsAndAddLayer() {
         { name: 'event-icon', url: 'event.png' },
         { name: 'shrine-icon', url: 'shrine.png' },
         { name: 'hotel-icon', url: 'hotel.png' },
-        { name: 'food-icon', url: 'food.png' }
+        { name: 'food-icon', url: 'food.png' },
+        // みんなのおすすめスポット用のアイコン
+        { name: 'mayor-icon', url: '市長.png' },
+        { name: 'male-icon', url: '男性.png' },
+        { name: 'female-icon', url: '女性.png' },
+        { name: 'girl-icon', url: '女性.png' }, // 女子は女性アイコンを使用
+        { name: 'boy-icon', url: '男性.png' }, // 男子は男性アイコンを使用
+        { name: 'grandfather-icon', url: 'おじいちゃん.png' },
+        { name: 'grandmother-icon', url: 'おばあちゃん.png' }
     ];
     let loaded = 0;
     iconFiles.forEach(icon => {
@@ -98,6 +106,41 @@ function loadIconsAndAddLayer() {
                 } catch (e) {
                     console.error('❌ marker-layer追加失敗', e);
                 }
+                
+                // みんなのおすすめスポットのソースとレイヤーを再追加
+                try {
+                    if (!map.getSource('recommended-spots')) {
+                        map.addSource('recommended-spots', { type: 'geojson', data: lastRecommendedSpotsGeoJson || { type: 'FeatureCollection', features: [] } });
+                        console.log('✅ recommended-spotsソース追加');
+                    } else {
+                        map.getSource('recommended-spots').setData(lastRecommendedSpotsGeoJson || { type: 'FeatureCollection', features: [] });
+                        console.log('ℹ️ recommended-spotsソース更新');
+                    }
+                } catch (e) {
+                    console.error('❌ recommended-spotsソース追加/更新失敗', e);
+                }
+                try {
+                    if (!map.getLayer('recommended-spots-layer')) {
+                        map.addLayer({
+                            id: 'recommended-spots-layer',
+                            type: 'symbol',
+                            source: 'recommended-spots',
+                            layout: {
+                                'icon-image': ['get', 'icon'],
+                                'icon-size': 0.2,
+                                'icon-allow-overlap': true
+                            },
+                            paint: {
+                                'icon-opacity': 0
+                            }
+                        });
+                        console.log('✅ recommended-spots-layer追加');
+                    } else {
+                        console.log('ℹ️ recommended-spots-layerは既に存在');
+                    }
+                } catch (e) {
+                    console.error('❌ recommended-spots-layer追加失敗', e);
+                }
             }
         });
     });
@@ -139,11 +182,18 @@ function highlightTakasima() {
 const sheetNames = ['takasima_map'];
 const spreadsheetId = '1AZgfYRfWLtVXH7rx7BeEPmbmdy7EfnGDbAwi6bMSNsU';
 const apiKey = 'AIzaSyAj_tQf-bp0v3j6Pl8S7HQVO5I-D5WI0GQ';
+
+// みんなのおすすめスポット用の設定
+const recommendedSpotsSpreadsheetId = '1kshDopEBMw-7chK-TyV8_vp9Qhwe25ScoZ-BYmIJnL8';
+const recommendedSpotsSheetName = 'おすすめスポット'; // 正しいシート名
+
 let data = {};
 let markers = [];
+let recommendedSpotsMarkers = [];
 let categories = new Set();
 let boundaryGeoJson = null;
 let lastMarkersGeoJson = null;
+let lastRecommendedSpotsGeoJson = null;
 
 async function fetchData(sheetName) {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
@@ -156,6 +206,34 @@ async function fetchData(sheetName) {
     } catch (error) {
         console.error('Error fetching data:', error);
         return null;
+    }
+}
+
+// みんなのおすすめスポットのデータを取得
+async function fetchRecommendedSpotsData() {
+    console.log('Fetching recommended spots data from', recommendedSpotsSheetName);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${recommendedSpotsSpreadsheetId}/values/${recommendedSpotsSheetName}?key=${apiKey}`;
+    console.log('Request URL:', url);
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Failed to fetch recommended spots data');
+        }
+        const data = await response.json();
+        console.log('Fetched recommended spots data:', data);
+        
+        if (!data.values || data.values.length === 0) {
+            console.log('No recommended spots data found');
+            return [];
+        }
+        
+        // 参考コードと同じように、ヘッダー行を削除しない
+        console.log('Processed recommended spots rows:', data.values);
+        return data.values;
+    } catch (error) {
+        console.error('Error fetching recommended spots data:', error);
+        return [];
     }
 }
 
@@ -313,10 +391,62 @@ async function init() {
         });
 
         map.on('click', (e) => {
-            const features = map.queryRenderedFeatures(e.point, { layers: ['marker-layer'] });
-            if (features.length === 0) {
+            const markerFeatures = map.queryRenderedFeatures(e.point, { layers: ['marker-layer'] });
+            const recommendedFeatures = map.queryRenderedFeatures(e.point, { layers: ['recommended-spots-layer'] });
+            
+            if (markerFeatures.length === 0 && recommendedFeatures.length === 0) {
                 popup.remove();
                 isPopupFixed = false;
+                recommendedSpotsPopup.remove();
+                isRecommendedSpotsPopupFixed = false;
+            }
+        });
+
+        // みんなのおすすめスポット用のポップアップ
+        const recommendedSpotsPopup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false });
+        let isRecommendedSpotsPopupFixed = false;
+
+        map.on('mouseenter', 'recommended-spots-layer', (e) => {
+            map.getCanvas().style.cursor = 'pointer';
+            if (!isRecommendedSpotsPopupFixed) {
+                const features = map.queryRenderedFeatures(e.point, { layers: ['recommended-spots-layer'] });
+                if (features.length > 0) {
+                    const feature = features[0];
+                    const coordinates = feature.geometry.coordinates.slice();
+                    const properties = feature.properties;
+                    const html = `
+                        <div class="popup">
+                            <h3>${properties.recommendedPlace}</h3>
+                            <p><strong>${properties.nickname}</strong>のおすすめ</p>
+                            ${properties.reason ? `<p>${properties.reason}</p>` : ''}
+                        </div>
+                    `;
+                    recommendedSpotsPopup.setLngLat(coordinates).setHTML(html).addTo(map);
+                }
+            }
+        });
+
+        map.on('mouseleave', 'recommended-spots-layer', () => {
+            map.getCanvas().style.cursor = '';
+            if (!isRecommendedSpotsPopupFixed) recommendedSpotsPopup.remove();
+        });
+
+        map.on('click', 'recommended-spots-layer', (e) => {
+            const features = map.queryRenderedFeatures(e.point, { layers: ['recommended-spots-layer'] });
+            if (features.length > 0) {
+                const feature = features[0];
+                const coordinates = feature.geometry.coordinates.slice();
+                const properties = feature.properties;
+                const html = `
+                    <div class="popup">
+                        <h3>${properties.recommendedPlace}</h3>
+                        <p><strong>${properties.nickname}</strong>のおすすめ</p>
+                        ${properties.reason ? `<p>${properties.reason}</p>` : ''}
+                    </div>
+                `;
+                recommendedSpotsPopup.remove();
+                recommendedSpotsPopup.setLngLat(coordinates).setHTML(html).addTo(map);
+                isRecommendedSpotsPopupFixed = true;
             }
         });
 
@@ -393,6 +523,117 @@ async function init() {
         });
         updateMarkers();
     });
+}
+
+// みんなのおすすめスポットの初期化
+async function initRecommendedSpots() {
+    let points = await fetchRecommendedSpotsData();
+    
+    // データが取得できない場合はテスト用のダミーデータを使用
+    if (!points || points.length === 0) {
+        console.log('Using dummy data for testing');
+        points = [
+            ['2025-01-01', 'けんた', '高島市市役所', '７月２３日麗澤大学と高島市の協定調印式！', '35.353044, 136.035733', '市長'],
+            ['2025-01-01', 'テストユーザー', '琵琶湖', '美しい湖の景色', '35.377868, 135.946352', '男性']
+        ];
+    }
+
+    recommendedSpotsMarkers = [];
+
+    points.forEach((point, index) => {
+        // ヘッダー行をスキップ
+        if (index === 0) return;
+        
+        const [timestamp, nickname, recommendedPlace, reason, coordinates, icon] = point;
+        
+        if (!coordinates || !recommendedPlace) return;
+        
+        // 緯度経度を解析
+        let lat, lon;
+        try {
+            const coords = coordinates.split(',').map(coord => coord.trim());
+            lat = parseFloat(coords[0]);
+            lon = parseFloat(coords[1]);
+        } catch (e) {
+            console.warn('Invalid coordinates format:', coordinates);
+            return;
+        }
+        
+        if (isNaN(lat) || isNaN(lon)) return;
+        
+        // アイコン名を決定
+        let iconName = 'mayor-icon'; // デフォルト
+        if (icon) {
+            switch (icon.trim()) {
+                case '市長':
+                    iconName = 'mayor-icon';
+                    break;
+                case '男性':
+                    iconName = 'male-icon';
+                    break;
+                case '女性':
+                    iconName = 'female-icon';
+                    break;
+                case '女子':
+                    iconName = 'girl-icon';
+                    break;
+                case '男子':
+                    iconName = 'boy-icon';
+                    break;
+                case 'おじいちゃん':
+                    iconName = 'grandfather-icon';
+                    break;
+                case 'おばあちゃん':
+                    iconName = 'grandmother-icon';
+                    break;
+            }
+        }
+        
+        recommendedSpotsMarkers.push({
+            coordinates: [lon, lat],
+            properties: { 
+                nickname: nickname || '匿名',
+                recommendedPlace: recommendedPlace,
+                reason: reason || '',
+                icon: iconName
+            }
+        });
+    });
+
+    lastRecommendedSpotsGeoJson = {
+        type: 'FeatureCollection',
+        features: recommendedSpotsMarkers.map(marker => ({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: marker.coordinates },
+            properties: marker.properties
+        }))
+    };
+
+    // ソースとレイヤーを追加（初期状態では非表示）
+    if (map.getSource('recommended-spots')) {
+        map.getSource('recommended-spots').setData(lastRecommendedSpotsGeoJson);
+    } else {
+        map.addSource('recommended-spots', { 
+            type: 'geojson', 
+            data: lastRecommendedSpotsGeoJson 
+        });
+    }
+    
+    if (!map.getLayer('recommended-spots-layer')) {
+        map.addLayer({
+            id: 'recommended-spots-layer',
+            type: 'symbol',
+            source: 'recommended-spots',
+                                        layout: {
+                                'icon-image': ['get', 'icon'],
+                                'icon-size': 0.2,
+                                'icon-allow-overlap': true
+                            },
+            paint: {
+                'icon-opacity': 0
+            }
+        });
+    }
 }
 
 // 高島市の外枠を描画する関数
@@ -498,6 +739,40 @@ basemapToggle.addEventListener('change', () => {
     } else {
         map.setStyle(STREETS_STYLE);
         basemapLabel.textContent = '標準地図';
+    }
+});
+
+// みんなのおすすめスポットのトグル
+const recommendedSpotsToggle = document.getElementById('recommended-spots-toggle');
+const recommendedSpotsLabel = document.getElementById('recommended-spots-label');
+recommendedSpotsToggle.addEventListener('change', () => {
+    if (map.getLayer('recommended-spots-layer')) {
+        if (recommendedSpotsToggle.checked) {
+            // 表示
+            map.setPaintProperty('recommended-spots-layer', 'icon-opacity', 1);
+            recommendedSpotsLabel.textContent = 'みんなのおすすめ';
+            
+            // カテゴリーボタンを全部OFFにする
+            const categoryButtons = document.querySelectorAll('.category-button:not([data-category="__ALL__"])');
+            categoryButtons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.dataset.active = 'false';
+            });
+            
+            // ALLボタンをONにする
+            const allButton = document.querySelector('.category-button[data-category="__ALL__"]');
+            if (allButton) {
+                allButton.classList.add('active');
+                allButton.dataset.active = 'true';
+            }
+            
+            // マーカーを更新
+            updateMarkers();
+        } else {
+            // 非表示
+            map.setPaintProperty('recommended-spots-layer', 'icon-opacity', 0);
+            recommendedSpotsLabel.textContent = 'みんなのおすすめ';
+        }
     }
 });
 
@@ -616,5 +891,6 @@ init = async function() {
 
 document.addEventListener('DOMContentLoaded', () => {
     init();
+    initRecommendedSpots();
     setTimeout(highlightTakasima, 2000);
 });

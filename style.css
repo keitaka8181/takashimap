@@ -294,6 +294,13 @@ html, body {
 .switch input:checked + .slider:before {
   transform: translateX(26px);
 }
+
+/* みんなのおすすめスポットのアイコンを丸く小さくする */
+.mapboxgl-marker img {
+  border-radius: 50%;
+  width: 20px !important;
+  height: 20px !important;
+}
 #search-box {
     position: absolute;
     top: 10px;
