@@ -25,6 +25,37 @@ map.on('style.load', () => {
     if (boundaryGeoJson) {
         drawOuterBoundary(boundaryGeoJson);
     }
+    
+    // おすすめスポットのレイヤーも再初期化
+    if (lastRecommendedSpotsGeoJson) {
+        try {
+            if (!map.getSource('recommended-spots')) {
+                map.addSource('recommended-spots', { 
+                    type: 'geojson', 
+                    data: lastRecommendedSpotsGeoJson 
+                });
+            }
+            
+            if (!map.getLayer('recommended-spots-layer')) {
+                map.addLayer({
+                    id: 'recommended-spots-layer',
+                    type: 'symbol',
+                    source: 'recommended-spots',
+                    layout: {
+                        'icon-image': ['get', 'icon'],
+                        'icon-size': 0.2,
+                        'icon-allow-overlap': true
+                    },
+                    paint: {
+                        'icon-opacity': 0
+                    }
+                });
+            }
+            console.log('✅ Recommended spots layer re-initialized on style load');
+        } catch (error) {
+            console.error('❌ Failed to re-initialize recommended spots layer:', error);
+        }
+    }
 });
 
 function loadIconsAndAddLayer() {
@@ -194,6 +225,7 @@ let categories = new Set();
 let boundaryGeoJson = null;
 let lastMarkersGeoJson = null;
 let lastRecommendedSpotsGeoJson = null;
+let recommendedSpotsVisible = false; // おすすめスポットの表示状態を管理
 
 async function fetchData(sheetName) {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
@@ -766,38 +798,62 @@ basemapToggle.addEventListener('change', () => {
 });
 
 // みんなのおすすめスポットのトグル
-const recommendedSpotsToggle = document.getElementById('recommended-spots-toggle');
-const recommendedSpotsLabel = document.getElementById('recommended-spots-label');
-recommendedSpotsToggle.addEventListener('change', () => {
-    if (map.getLayer('recommended-spots-layer')) {
-        if (recommendedSpotsToggle.checked) {
-            // 表示
-            map.setPaintProperty('recommended-spots-layer', 'icon-opacity', 1);
-            recommendedSpotsLabel.textContent = 'みんなのおすすめ';
-            
-            // カテゴリーボタンを全部OFFにする
-            const categoryButtons = document.querySelectorAll('.category-button:not([data-category="__ALL__"])');
-            categoryButtons.forEach(btn => {
-                btn.classList.remove('active');
-                btn.dataset.active = 'false';
-            });
-            
-            // ALLボタンをONにする
-            const allButton = document.querySelector('.category-button[data-category="__ALL__"]');
-            if (allButton) {
-                allButton.classList.add('active');
-                allButton.dataset.active = 'true';
-            }
-            
-            // マーカーを更新
-            updateMarkers();
-        } else {
-            // 非表示
-            map.setPaintProperty('recommended-spots-layer', 'icon-opacity', 0);
-            recommendedSpotsLabel.textContent = 'みんなのおすすめ';
-        }
+function setupRecommendedSpotsToggle() {
+    const recommendedSpotsToggle = document.getElementById('recommended-spots-toggle');
+    const recommendedSpotsLabel = document.getElementById('recommended-spots-label');
+    
+    if (!recommendedSpotsToggle) {
+        console.error('Recommended spots toggle not found');
+        return;
     }
-});
+    
+    recommendedSpotsToggle.addEventListener('change', () => {
+        console.log('Recommended spots toggle changed:', recommendedSpotsToggle.checked);
+        
+        // レイヤーの存在確認
+        if (!map.getLayer('recommended-spots-layer')) {
+            console.error('Recommended spots layer not found');
+            return;
+        }
+        
+        try {
+            if (recommendedSpotsToggle.checked) {
+                // 表示
+                console.log('Showing recommended spots');
+                map.setPaintProperty('recommended-spots-layer', 'icon-opacity', 1);
+                recommendedSpotsLabel.textContent = 'みんなのおすすめ';
+                recommendedSpotsVisible = true;
+                
+                // カテゴリーボタンを全部OFFにする
+                const categoryButtons = document.querySelectorAll('.category-button:not([data-category="__ALL__"])');
+                categoryButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.dataset.active = 'false';
+                });
+                
+                // ALLボタンをONにする
+                const allButton = document.querySelector('.category-button[data-category="__ALL__"]');
+                if (allButton) {
+                    allButton.classList.add('active');
+                    allButton.dataset.active = 'true';
+                }
+                
+                // マーカーを更新
+                updateMarkers();
+            } else {
+                // 非表示
+                console.log('Hiding recommended spots');
+                map.setPaintProperty('recommended-spots-layer', 'icon-opacity', 0);
+                recommendedSpotsLabel.textContent = 'みんなのおすすめ';
+                recommendedSpotsVisible = false;
+            }
+        } catch (error) {
+            console.error('Error toggling recommended spots:', error);
+        }
+    });
+    
+    console.log('Recommended spots toggle setup complete');
+}
 
 // マーカーの表示を更新する関数
 function updateMarkers() {
@@ -913,16 +969,23 @@ init = async function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded - Starting initialization');
+    
     // 初期化を順次実行
     init().then(() => {
+        console.log('Main init completed');
         // メインの初期化が完了してから、おすすめスポットを初期化
         return initRecommendedSpots();
     }).then(() => {
+        console.log('Recommended spots init completed');
+        // トグルスイッチの設定
+        setupRecommendedSpotsToggle();
         // 両方の初期化が完了してから高島市に移動
         setTimeout(highlightTakasima, 2000);
     }).catch(error => {
         console.error('Initialization error:', error);
-        // エラーが発生しても高島市に移動
+        // エラーが発生してもトグルスイッチの設定と高島市への移動を実行
+        setupRecommendedSpotsToggle();
         setTimeout(highlightTakasima, 2000);
     });
 });
