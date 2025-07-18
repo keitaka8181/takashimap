@@ -216,9 +216,22 @@ async function fetchRecommendedSpotsData() {
     console.log('Request URL:', url);
 
     try {
-        const response = await fetch(url);
+        // GitHub Pagesでの動作を確実にするため、タイムアウトを設定
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒でタイムアウト
+
+        const response = await fetch(url, {
+            signal: controller.signal,
+            mode: 'cors',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
-            throw new Error('Failed to fetch recommended spots data');
+            throw new Error(`HTTP ${response.status}: Failed to fetch recommended spots data`);
         }
         const data = await response.json();
         console.log('Fetched recommended spots data:', data);
@@ -233,6 +246,9 @@ async function fetchRecommendedSpotsData() {
         return data.values;
     } catch (error) {
         console.error('Error fetching recommended spots data:', error);
+        if (error.name === 'AbortError') {
+            console.log('Request timed out, using fallback data');
+        }
         return [];
     }
 }
@@ -531,10 +547,12 @@ async function initRecommendedSpots() {
     
     // データが取得できない場合はテスト用のダミーデータを使用
     if (!points || points.length === 0) {
-        console.log('Using dummy data for testing');
+        console.log('Using dummy data for testing - API access failed or no data available');
         points = [
             ['2025-01-01', 'けんた', '高島市市役所', '７月２３日麗澤大学と高島市の協定調印式！', '35.353044, 136.035733', '市長'],
-            ['2025-01-01', 'テストユーザー', '琵琶湖', '美しい湖の景色', '35.377868, 135.946352', '男性']
+            ['2025-01-01', 'テストユーザー', '琵琶湖', '美しい湖の景色', '35.377868, 135.946352', '男性'],
+            ['2025-01-01', '地元の方', 'マキノサニービーチ', '夏の海水浴場として人気', '35.416667, 136.016667', '女性'],
+            ['2025-01-01', '観光客', '高島市観光案内所', '観光情報が充実', '35.353044, 136.035733', 'おじいちゃん']
         ];
     }
 
@@ -609,30 +627,35 @@ async function initRecommendedSpots() {
         }))
     };
 
-    // ソースとレイヤーを追加（初期状態では非表示）
-    if (map.getSource('recommended-spots')) {
-        map.getSource('recommended-spots').setData(lastRecommendedSpotsGeoJson);
-    } else {
-        map.addSource('recommended-spots', { 
-            type: 'geojson', 
-            data: lastRecommendedSpotsGeoJson 
-        });
-    }
-    
-    if (!map.getLayer('recommended-spots-layer')) {
-        map.addLayer({
-            id: 'recommended-spots-layer',
-            type: 'symbol',
-            source: 'recommended-spots',
-                                        layout: {
-                                'icon-image': ['get', 'icon'],
-                                'icon-size': 0.2,
-                                'icon-allow-overlap': true
-                            },
-            paint: {
-                'icon-opacity': 0
-            }
-        });
+        // ソースとレイヤーを追加（初期状態では非表示）
+    try {
+        if (map.getSource('recommended-spots')) {
+            map.getSource('recommended-spots').setData(lastRecommendedSpotsGeoJson);
+        } else {
+            map.addSource('recommended-spots', { 
+                type: 'geojson', 
+                data: lastRecommendedSpotsGeoJson 
+            });
+        }
+        
+        if (!map.getLayer('recommended-spots-layer')) {
+            map.addLayer({
+                id: 'recommended-spots-layer',
+                type: 'symbol',
+                source: 'recommended-spots',
+                layout: {
+                    'icon-image': ['get', 'icon'],
+                    'icon-size': 0.2,
+                    'icon-allow-overlap': true
+                },
+                paint: {
+                    'icon-opacity': 0
+                }
+            });
+        }
+        console.log('✅ Recommended spots layer initialized successfully');
+    } catch (error) {
+        console.error('❌ Failed to initialize recommended spots layer:', error);
     }
 }
 
@@ -890,7 +913,16 @@ init = async function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    init();
-    initRecommendedSpots();
-    setTimeout(highlightTakasima, 2000);
+    // 初期化を順次実行
+    init().then(() => {
+        // メインの初期化が完了してから、おすすめスポットを初期化
+        return initRecommendedSpots();
+    }).then(() => {
+        // 両方の初期化が完了してから高島市に移動
+        setTimeout(highlightTakasima, 2000);
+    }).catch(error => {
+        console.error('Initialization error:', error);
+        // エラーが発生しても高島市に移動
+        setTimeout(highlightTakasima, 2000);
+    });
 });
