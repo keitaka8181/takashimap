@@ -295,11 +295,11 @@ html, body {
   transform: translateX(26px);
 }
 
-/* みんなのおすすめスポットのアイコンを丸く小さくする */
+/* みんなのおすすめスポットのアイコンを丸くする */
 .mapboxgl-marker img {
   border-radius: 50%;
-  width: 20px !important;
-  height: 20px !important;
+  width: 16px !important;
+  height: 16px !important;
 }
 #search-box {
     position: absolute;
