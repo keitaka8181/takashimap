@@ -298,8 +298,6 @@ html, body {
 /* みんなのおすすめスポットのアイコンを丸くする */
 .mapboxgl-marker img {
   border-radius: 50%;
-  width: 16px !important;
-  height: 16px !important;
 }
 #search-box {
     position: absolute;
