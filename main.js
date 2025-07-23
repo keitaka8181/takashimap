@@ -20,6 +20,12 @@ map.addControl(new mapboxgl.NavigationControl());
 let boundaryLoaded = false;
 map.on('style.load', () => {
     map.setFog({});
+    // ラベルレイヤーを非表示にする
+    map.getStyle().layers.forEach(layer => {
+        if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
+            map.setLayoutProperty(layer.id, 'visibility', 'none');
+        }
+    });
     // アイコンとレイヤーを再登録
     loadIconsAndAddLayer();
     if (boundaryGeoJson) {
@@ -43,7 +49,7 @@ map.on('style.load', () => {
                     source: 'recommended-spots',
                     layout: {
                         'icon-image': ['get', 'icon'],
-                        'icon-size': 0.2,
+                        'icon-size': 0.1, // 小さめに
                         'icon-allow-overlap': true
                     },
                     paint: {
@@ -158,7 +164,16 @@ function loadIconsAndAddLayer() {
                             source: 'recommended-spots',
                             layout: {
                                 'icon-image': ['get', 'icon'],
-                                'icon-size': 0.2,
+                                'icon-size': [
+                                    'match',
+                                    ['get', 'icon'],
+                                    'mayor-icon', 0.13,
+                                    'male-icon', 0.13,
+                                    'female-icon', 0.13,
+                                    'grandfather-icon', 0.13,
+                                    'grandmother-icon', 0.13,
+                                    0.2
+                                ],
                                 'icon-allow-overlap': true
                             },
                             paint: {
@@ -569,6 +584,27 @@ async function init() {
             categoryRow.appendChild(categoryButton);
             filterContainer.appendChild(categoryRow);
         });
+        // みんなのおすすめ一覧ボタンを追加
+        const recommendListRow = document.createElement('div');
+        recommendListRow.className = 'category-row';
+        const recommendListBtn = document.createElement('button');
+        recommendListBtn.className = 'category-button';
+        recommendListBtn.textContent = 'みんなのおすすめ一覧';
+        recommendListBtn.style.background = '#ffe082';
+        recommendListBtn.style.color = '#333';
+        recommendListBtn.style.fontWeight = 'bold';
+        recommendListBtn.onclick = () => {
+            // 検索パネルを開き、みんなのおすすめ一覧を表示
+            const searchBox = document.getElementById('search-box');
+            const searchCategory = document.getElementById('search-category');
+            const searchInput = document.getElementById('search-input');
+            searchCategory.value = '__recommended__';
+            searchInput.value = '';
+            if (typeof doSearch === 'function') doSearch();
+            searchBox.classList.remove('hidden');
+        };
+        recommendListRow.appendChild(recommendListBtn);
+        filterContainer.appendChild(recommendListRow);
         updateMarkers();
     });
 }
@@ -911,9 +947,8 @@ searchCloseBtn.addEventListener('click', () => {
     searchResults.innerHTML = '';
 });
 
-// カテゴリーリストを動的にセット
+// 検索カテゴリーリストを動的にセット
 function updateSearchCategoryOptions() {
-    // markers, categoriesはグローバル
     searchCategory.innerHTML = '<option value="">すべてのカテゴリー</option>';
     Array.from(categories).forEach(cat => {
         const option = document.createElement('option');
@@ -921,13 +956,48 @@ function updateSearchCategoryOptions() {
         option.textContent = cat;
         searchCategory.appendChild(option);
     });
+    // みんなのおすすめを追加
+    const option = document.createElement('option');
+    option.value = '__recommended__';
+    option.textContent = 'みんなのおすすめ';
+    searchCategory.appendChild(option);
 }
 
 // 検索処理
 function doSearch() {
     const keyword = searchInput.value.trim().toLowerCase();
     const cat = searchCategory.value;
-    let filtered = markers;
+    let filtered = [];
+    if (cat === '__recommended__') {
+        // みんなのおすすめ
+        filtered = recommendedSpotsMarkers;
+        if (keyword) {
+            filtered = filtered.filter(m =>
+                (m.properties.recommendedPlace && m.properties.recommendedPlace.toLowerCase().includes(keyword)) ||
+                (m.properties.nickname && m.properties.nickname.toLowerCase().includes(keyword)) ||
+                (m.properties.reason && m.properties.reason.toLowerCase().includes(keyword))
+            );
+        }
+        // 結果表示
+        searchResults.innerHTML = '';
+        if (filtered.length === 0) {
+            searchResults.innerHTML = '<div style="color:#888;padding:8px;">該当なし</div>';
+            return;
+        }
+        filtered.forEach(marker => {
+            const div = document.createElement('div');
+            div.className = 'search-result-item';
+            div.innerHTML = `<strong>${marker.properties.recommendedPlace}</strong><br><span style="font-size:12px;color:#666;">${marker.properties.nickname}${marker.properties.reason ? ' / ' + marker.properties.reason : ''}</span>`;
+            div.onclick = () => {
+                flyToMarker(marker.coordinates[0], marker.coordinates[1]);
+                searchBox.classList.add('hidden');
+            };
+            searchResults.appendChild(div);
+        });
+        return;
+    }
+    // 通常のカテゴリー
+    filtered = markers;
     if (cat) {
         filtered = filtered.filter(m => m.category === cat);
     }
@@ -955,6 +1025,15 @@ function doSearch() {
         searchResults.appendChild(div);
     });
 }
+
+// 「みんなのおすすめ一覧」ボタンのイベント
+// recommendedListBtn.onclick = () => {
+//     // 一覧表示
+//     searchCategory.value = '__recommended__';
+//     searchInput.value = '';
+//     doSearch();
+//     searchBox.classList.remove('hidden');
+// };
 
 // 入力イベント
 searchInput.addEventListener('input', doSearch);
