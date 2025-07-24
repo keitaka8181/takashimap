@@ -810,12 +810,27 @@ function hideInfoPopup() {
 }
 
 // マーカーに飛ぶ関数
-window.flyToMarker = function(lon, lat) {
+window.flyToMarker = function(lon, lat, markerData = null) {
     map.flyTo({
         center: [lon, lat],
         zoom: 15,
         speed: 1.2
     });
+    
+    // おすすめスポットの場合はポップアップを表示
+    if (markerData && markerData.properties && markerData.properties.recommendedPlace) {
+        setTimeout(() => {
+            const html = `
+                <div class="popup">
+                    <h3>${markerData.properties.recommendedPlace}</h3>
+                    <p><strong>${markerData.properties.nickname}</strong>のおすすめ</p>
+                    ${markerData.properties.reason ? `<p>${markerData.properties.reason}</p>` : ''}
+                </div>
+            `;
+            const popup = new mapboxgl.Popup({ closeButton: true, closeOnClick: false });
+            popup.setLngLat([lon, lat]).setHTML(html).addTo(map);
+        }, 1500); // 飛行完了後に表示
+    }
 };
 
 // ポップアップの閉じるボタンのイベントリスナー
@@ -989,7 +1004,7 @@ function doSearch() {
             div.className = 'search-result-item';
             div.innerHTML = `<strong>${marker.properties.recommendedPlace}</strong><br><span style="font-size:12px;color:#666;">${marker.properties.nickname}${marker.properties.reason ? ' / ' + marker.properties.reason : ''}</span>`;
             div.onclick = () => {
-                flyToMarker(marker.coordinates[0], marker.coordinates[1]);
+                flyToMarker(marker.coordinates[0], marker.coordinates[1], marker);
                 searchBox.classList.add('hidden');
             };
             searchResults.appendChild(div);
