@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Mapbox Zoom Example</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css" rel="stylesheet" />
@@ -31,20 +31,6 @@
         <div id="info-popup-content">
             <!-- 情報がここに動的に追加されます -->
         </div>
-    </div>
-    <div id="basemap-switcher" style="position:absolute;top:10px;left:260px;z-index:1100;">
-      <label class="switch">
-        <input type="checkbox" id="basemap-toggle" checked>
-        <span class="slider"></span>
-      </label>
-      <span id="basemap-label" style="margin-left:10px;">衛星画像</span>
-    </div>
-    <div id="recommended-spots-switcher" style="position:absolute;top:10px;left:420px;z-index:1100;">
-      <label class="switch">
-        <input type="checkbox" id="recommended-spots-toggle">
-        <span class="slider"></span>
-      </label>
-      <span id="recommended-spots-label" style="margin-left:10px;">みんなのおすすめ</span>
     </div>
     <div id="search-toggle" title="検索" style="position:absolute;top:10px;right:10px;z-index:1200;">
         <button id="search-icon-btn" style="background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;">
