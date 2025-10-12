@@ -12,17 +12,33 @@
 </head>
 <body>
     <div id="map"></div>
-    <div id="logo">
-        <img src="logo.png" alt="高島ロゴ">
+    
+    <!-- Googleマップ風のヘッダーエリア -->
+    <div id="header-container">
+        <!-- ロゴ -->
+        <div id="logo">
+            <img src="logo.png" alt="高島ロゴ">
+        </div>
+        
+        <!-- メイン検索バー -->
+        <div id="search-container">
+            <div id="search-box-main">
+                <div id="search-icon">
+                    <svg width="20" height="20" fill="#666" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </div>
+                <input type="text" id="search-input-main" placeholder="ここで検索" autocomplete="off">
+            </div>
+        </div>
     </div>
-    <div id="filter-container" class="compact">
-        <!-- 初期表示のチェックボックスを削除 -->
+    
+    <!-- カテゴリーフィルターエリア -->
+    <div id="category-filter-container">
+        <div id="category-scroll">
+            <!-- カテゴリーボタンがここに動的に追加される -->
+        </div>
     </div>
-    <button id="toggle-arrow" title="カテゴリーを表示/非表示">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
-        </svg>
-    </button>
     <div id="info-popup">
         <div id="info-popup-header">
             <h3 id="info-popup-title">カテゴリー情報</h3>
@@ -31,26 +47,6 @@
         <div id="info-popup-content">
             <!-- 情報がここに動的に追加されます -->
         </div>
-    </div>
-    <div id="search-toggle" title="検索" style="position:absolute;top:10px;right:10px;z-index:1200;">
-        <button id="search-icon-btn" style="background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;">
-            <svg width="20" height="20" fill="#333" viewBox="0 0 20 20">
-                <circle cx="9" cy="9" r="7" stroke="#333" stroke-width="2" fill="none"/>
-                <line x1="14" y1="14" x2="19" y2="19" stroke="#333" stroke-width="2"/>
-            </svg>
-            <span id="search-label" class="search-label">検索</span>
-        </button>
-    </div>
-    <div id="search-box" class="hidden" style="right:10px;left:auto;">
-        <div class="search-box-inner">
-            <input type="text" id="search-input" placeholder="キーワードで検索" autocomplete="off">
-            <select id="search-category">
-                <option value="">すべてのカテゴリー</option>
-                <!-- カテゴリーはJSで動的に追加 -->
-            </select>
-            <button id="search-close-btn" title="閉じる">×</button>
-        </div>
-        <div id="search-results"></div>
     </div>
     <script src="main.js"></script>
     <style>

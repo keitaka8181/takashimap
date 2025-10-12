@@ -160,16 +160,16 @@ function loadIconsAndAddLayer() {
                             source: 'recommended-spots',
                             layout: {
                                 'icon-image': ['get', 'icon'],
-                    'icon-size': [
-                        'match',
-                        ['get', 'icon'],
+                                'icon-size': [
+                                    'match',
+                                    ['get', 'icon'],
                         'mayor-icon', 0.15,
                         'male-icon', 0.15,
                         'female-icon', 0.15,
                         'grandfather-icon', 0.15,
                         'grandmother-icon', 0.15,
-                        0.2
-                    ],
+                                    0.2
+                                ],
                                 'icon-allow-overlap': true
                             },
                             paint: {
@@ -399,65 +399,48 @@ async function init() {
     console.log('Main init completed - waiting for recommended spots data');
 }
 
-// 動的にジャンルボタンを生成する関数
+// 動的にカテゴリーボタンを生成する関数（Googleマップ風）
 function generateGenreButtons() {
-    const filterContainer = document.getElementById('filter-container');
-    filterContainer.innerHTML = '';
+    const categoryScroll = document.getElementById('category-scroll');
+    categoryScroll.innerHTML = '';
     
     // すべてのジャンル名を取得
     const allGenres = Array.from(genres);
     
-    // ALLボタンを追加
-    const allRow = document.createElement('div');
-    allRow.className = 'category-row';
-    const allButton = document.createElement('button');
-    allButton.className = 'category-button';
-    allButton.innerHTML = `<span>ALL</span>`;
-    allButton.title = '全て非表示/全て表示';
-    allButton.dataset.genre = '__ALL__';
-    allButton.dataset.active = 'true'; // デフォルトでON（全非表示）
-    allButton.classList.add('active');
-    allButton.onclick = (e) => {
-        e.preventDefault();
-        const genreButtons = document.querySelectorAll('.category-button');
-        if (!allButton.classList.contains('active')) {
-            // ALL ON: すべて非表示
-            genreButtons.forEach(btn => {
-                if (btn !== allButton) btn.classList.remove('active');
-                btn.dataset.active = 'false';
-            });
-            allButton.classList.add('active');
-            allButton.dataset.active = 'true';
-        } else {
-            // ALL OFF: すべて表示
-            genreButtons.forEach(btn => {
-                if (btn !== allButton) btn.classList.add('active');
-                btn.dataset.active = 'true';
-            });
-            allButton.classList.remove('active');
-            allButton.dataset.active = 'false';
-        }
-        updateRecommendedSpotsFilter();
-    };
-    allRow.appendChild(allButton);
-    filterContainer.appendChild(allRow);
 
     // 各ジャンルボタンを追加
     allGenres.forEach(genre => {
         const style = GENRE_STYLES[genre] || { color: '#CCCCCC', icon: 'male-icon' };
-        const genreRow = document.createElement('div');
-        genreRow.className = 'category-row';
         const genreButton = document.createElement('button');
-        genreButton.className = 'category-button'; // 最初はOFF
+        genreButton.className = 'category-button';
         
-        // 英単語を抽出してボタンテキストに使用
-        const englishText = extractEnglishFromGenre(genre);
+        // ジャンルに応じたアイコンを設定
+        let iconSvg = '';
+        switch(genre) {
+            case 'グルメ':
+                iconSvg = `<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" class="category-icon">
+                    <path d="M8.1 13.34l2.83-2.83L3.91 3.5c-1.56 1.56-1.56 4.09 0 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/>
+                </svg>`;
+                break;
+            case '景色':
+                iconSvg = `<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" class="category-icon">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>`;
+                break;
+            case '体験':
+                iconSvg = `<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" class="category-icon">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>`;
+                break;
+            default:
+                iconSvg = `<img src="${style.icon.replace('-icon', '.png')}" alt="${genre}" class="category-icon">`;
+        }
         
         genreButton.innerHTML = `
-            <img src="${style.icon.replace('-icon', '.png')}" alt="${genre}" class="category-icon">
-            <span>${englishText}</span>
+            ${iconSvg}
+            <span>${genre}</span>
         `;
-        genreButton.title = `${genre}を表示ON/OFF`; // ツールチップには元のジャンル名を表示
+        genreButton.title = `${genre}を表示`;
         genreButton.dataset.genre = genre;
         genreButton.dataset.active = 'false';
         genreButton.onclick = (e) => {
@@ -465,61 +448,21 @@ function generateGenreButtons() {
             // ON/OFF切り替え
             const isActive = genreButton.classList.toggle('active');
             genreButton.dataset.active = isActive ? 'true' : 'false';
-            // ALLボタンの状態を制御
-            const allButton = document.querySelector('.category-button[data-genre="__ALL__"]');
-            const activeCount = document.querySelectorAll('.category-button.active:not([data-genre="__ALL__"])').length;
-            if (activeCount === 0) {
-                allButton.classList.add('active');
-                allButton.dataset.active = 'true';
-            } else {
-                allButton.classList.remove('active');
-                allButton.dataset.active = 'false';
-            }
             updateRecommendedSpotsFilter();
         };
-        genreRow.appendChild(genreButton);
-        filterContainer.appendChild(genreRow);
+        categoryScroll.appendChild(genreButton);
     });
-    
-    // みんなのおすすめ一覧ボタンを追加
-    const recommendListRow = document.createElement('div');
-    recommendListRow.className = 'category-row';
-    const recommendListBtn = document.createElement('button');
-    recommendListBtn.className = 'category-button';
-    recommendListBtn.textContent = 'Recommend'; // 短縮
-    recommendListBtn.title = 'みんなのおすすめ一覧を表示'; // ツールチップで詳細表示
-    recommendListBtn.style.background = '#ffe082';
-    recommendListBtn.style.color = '#333';
-    recommendListBtn.style.fontWeight = 'bold';
-    recommendListBtn.onclick = () => {
-        // 検索パネルを開き、みんなのおすすめ一覧を表示
-        const searchBox = document.getElementById('search-box');
-        const searchCategory = document.getElementById('search-category');
-        const searchInput = document.getElementById('search-input');
-        searchCategory.value = '__recommended__';
-        searchInput.value = '';
-        if (typeof doSearch === 'function') doSearch();
-        searchBox.classList.remove('hidden');
-    };
-    recommendListRow.appendChild(recommendListBtn);
-    filterContainer.appendChild(recommendListRow);
 }
+
+// スクロールボタンの設定（新しいレイアウトでは不要）
 
 // おすすめスポットのジャンルフィルター機能
 function updateRecommendedSpotsFilter() {
-    const allButton = document.querySelector('.category-button[data-genre="__ALL__"]');
-    const genreButtons = Array.from(document.querySelectorAll('.category-button:not([data-genre="__ALL__"])'));
+    const genreButtons = Array.from(document.querySelectorAll('.category-button'));
     const activeGenres = genreButtons.filter(btn => btn.classList.contains('active')).map(btn => btn.dataset.genre);
     
     let filteredFeatures;
-    if (allButton && allButton.classList.contains('active')) {
-        // ALLがON: すべて非表示（全データ表示）
-        filteredFeatures = recommendedSpotsMarkers.map(marker => ({
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: marker.coordinates },
-            properties: marker.properties
-        }));
-    } else if (activeGenres.length === 0) {
+    if (activeGenres.length === 0) {
         // すべてOFF: 全部表示
         filteredFeatures = recommendedSpotsMarkers.map(marker => ({
             type: 'Feature',
@@ -789,18 +732,7 @@ async function fetchBoundaryData() {
     }
 }
 
-// 矢印ボタンのクリックイベント
-document.getElementById('toggle-arrow').addEventListener('click', () => {
-    const filterContainer = document.getElementById('filter-container');
-    const toggleArrow = document.getElementById('toggle-arrow');
-    filterContainer.classList.toggle('hidden');
-    toggleArrow.classList.toggle('collapsed');
-    if (filterContainer.classList.contains('hidden')) {
-        toggleArrow.style.left = '10px';
-    } else {
-        toggleArrow.style.left = '210px';
-    }
-});
+// 古い矢印ボタンのイベントは削除（新しいレイアウトでは不要）
 
 // 情報ポップアップを表示する関数
 function showCategoryInfo(category) {
@@ -856,131 +788,37 @@ window.flyToMarker = function(lon, lat, markerData = null) {
 // ポップアップの閉じるボタンのイベントリスナー
 document.getElementById('info-popup-close').addEventListener('click', hideInfoPopup);
 
-// 検索UIの表示・非表示
-const searchToggle = document.getElementById('search-toggle');
-const searchBox = document.getElementById('search-box');
-const searchIconBtn = document.getElementById('search-icon-btn');
-const searchCloseBtn = document.getElementById('search-close-btn');
-const searchInput = document.getElementById('search-input');
-const searchCategory = document.getElementById('search-category');
-const searchResults = document.getElementById('search-results');
-
-// 検索ボックスを開く
-searchIconBtn.addEventListener('click', () => {
-    searchBox.classList.remove('hidden');
-    searchInput.focus();
-});
-// 閉じる
-searchCloseBtn.addEventListener('click', () => {
-    searchBox.classList.add('hidden');
-    searchInput.value = '';
-    searchResults.innerHTML = '';
-});
-
-// 検索カテゴリーリストを動的にセット
-function updateSearchCategoryOptions() {
-    searchCategory.innerHTML = '<option value="">すべてのカテゴリー</option>';
-    Array.from(genres).forEach(genre => {
-        const option = document.createElement('option');
-        option.value = genre;
-        option.textContent = genre;
-        searchCategory.appendChild(option);
-    });
-    // みんなのおすすめを追加
-    const option = document.createElement('option');
-    option.value = '__recommended__';
-    option.textContent = 'みんなのおすすめ';
-    searchCategory.appendChild(option);
-}
-
-// 検索処理
-function doSearch() {
-    const keyword = searchInput.value.trim().toLowerCase();
-    const cat = searchCategory.value;
-    let filtered = [];
-    if (cat === '__recommended__') {
-        // みんなのおすすめ
-        filtered = recommendedSpotsMarkers;
-        if (keyword) {
-            filtered = filtered.filter(m =>
-                (m.properties.recommendedPlace && m.properties.recommendedPlace.toLowerCase().includes(keyword)) ||
-                (m.properties.nickname && m.properties.nickname.toLowerCase().includes(keyword)) ||
-                (m.properties.reason && m.properties.reason.toLowerCase().includes(keyword)) ||
-                (m.properties.genre && m.properties.genre.toLowerCase().includes(keyword))
-            );
-        }
-        // 結果表示
-        searchResults.innerHTML = '';
-        if (filtered.length === 0) {
-            searchResults.innerHTML = '<div style="color:#888;padding:8px;">該当なし</div>';
-            return;
-        }
-        filtered.forEach(marker => {
-            const div = document.createElement('div');
-            div.className = 'search-result-item';
-            const genreTag = marker.properties.genre ? 
-                `<span style="background: ${GENRE_STYLES[marker.properties.genre]?.color || '#ccc'}; color: white; padding: 1px 4px; border-radius: 8px; font-size: 10px; margin-left: 4px;">${marker.properties.genre}</span>` : '';
-            div.innerHTML = `<strong>${marker.properties.recommendedPlace}</strong>${genreTag}<br><span style="font-size:12px;color:#666;">${marker.properties.nickname}${marker.properties.reason ? ' / ' + marker.properties.reason : ''}</span>`;
-            div.onclick = () => {
-                flyToMarker(marker.coordinates[0], marker.coordinates[1], marker);
-                searchBox.classList.add('hidden');
-            };
-            searchResults.appendChild(div);
-        });
-        return;
-    }
-    // ジャンルカテゴリー（おすすめスポットから検索）
-    filtered = recommendedSpotsMarkers;
-    if (cat) {
-        filtered = filtered.filter(m => m.properties.genre === cat);
-    }
-    if (keyword) {
-        filtered = filtered.filter(m =>
-            (m.properties.recommendedPlace && m.properties.recommendedPlace.toLowerCase().includes(keyword)) ||
-            (m.properties.nickname && m.properties.nickname.toLowerCase().includes(keyword)) ||
-            (m.properties.reason && m.properties.reason.toLowerCase().includes(keyword))
+// 新しい検索機能
+function setupSearchFunctionality() {
+    const searchInputMain = document.getElementById('search-input-main');
+    
+    // 検索実行
+    const performSearch = () => {
+        const keyword = searchInputMain.value.trim().toLowerCase();
+        if (!keyword) return;
+        
+        // おすすめスポットから検索
+        const filtered = recommendedSpotsMarkers.filter(marker =>
+            (marker.properties.recommendedPlace && marker.properties.recommendedPlace.toLowerCase().includes(keyword)) ||
+            (marker.properties.nickname && marker.properties.nickname.toLowerCase().includes(keyword)) ||
+            (marker.properties.reason && marker.properties.reason.toLowerCase().includes(keyword)) ||
+            (marker.properties.genre && marker.properties.genre.toLowerCase().includes(keyword))
         );
-    }
-    // 結果表示
-    searchResults.innerHTML = '';
-    if (filtered.length === 0) {
-        searchResults.innerHTML = '<div style="color:#888;padding:8px;">該当なし</div>';
-        return;
-    }
-    filtered.forEach(marker => {
-        const div = document.createElement('div');
-        div.className = 'search-result-item';
-        const genreTag = marker.properties.genre ? 
-            `<span style="background: ${GENRE_STYLES[marker.properties.genre]?.color || '#ccc'}; color: white; padding: 1px 4px; border-radius: 8px; font-size: 10px; margin-left: 4px;">${marker.properties.genre}</span>` : '';
-        div.innerHTML = `<strong>${marker.properties.recommendedPlace}</strong>${genreTag}<br><span style="font-size:12px;color:#666;">${marker.properties.nickname}${marker.properties.reason ? ' / ' + marker.properties.reason : ''}</span>`;
-        div.onclick = () => {
-            flyToMarker(marker.coordinates[0], marker.coordinates[1], marker);
-            searchBox.classList.add('hidden');
-        };
-        searchResults.appendChild(div);
+        
+        if (filtered.length > 0) {
+            // 最初の結果に移動
+            const firstResult = filtered[0];
+            flyToMarker(firstResult.coordinates[0], firstResult.coordinates[1], firstResult);
+        }
+    };
+    
+    // Enterキーで検索
+    searchInputMain.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
     });
 }
-
-// 「みんなのおすすめ一覧」ボタンのイベント
-// recommendedListBtn.onclick = () => {
-//     // 一覧表示
-//     searchCategory.value = '__recommended__';
-//     searchInput.value = '';
-//     doSearch();
-//     searchBox.classList.remove('hidden');
-// };
-
-// 入力イベント
-searchInput.addEventListener('input', doSearch);
-searchCategory.addEventListener('change', doSearch);
-
-// カテゴリーリスト初期化・更新
-// markers/categoriesが初期化された後(initの最後)で呼ぶ
-const _origInit = init;
-init = async function() {
-    await _origInit.apply(this, arguments);
-    updateSearchCategoryOptions();
-};
 
 // モバイル対応のタッチイベントハンドラー
 function setupMobileTouchHandlers() {
@@ -1064,6 +902,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // モバイル対応の初期化
     setupMobileTouchHandlers();
     optimizeMobileUI();
+    
+    // 検索機能の初期化
+    setupSearchFunctionality();
     
     // 初期化を順次実行
     init().then(() => {
