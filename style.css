@@ -116,32 +116,85 @@ html, body {
         right: 10px;
         width: auto;
         max-width: none;
-        padding: 15px;
+        padding: 12px;
+        max-height: 75vh;
+    }
+    
+    .info-popup-content h2 {
+        font-size: 18px;
+        margin: 0 0 14px 0;
+    }
+    
+    .info-section h3 {
+        font-size: 15px;
+        margin: 14px 0 7px 0;
+    }
+    
+    .info-section p {
+        font-size: 13px;
+        margin: 7px 0;
+    }
+    
+    .info-section li {
+        font-size: 13px;
+        margin: 4px 0;
+    }
+    
+    .credit p {
+        font-size: 12px;
     }
 }
 
 @media (max-width: 480px) {
     #info-popup {
         top: 50px;
-        left: 5px;
-        right: 5px;
-        padding: 12px;
+        left: 8px;
+        right: 8px;
+        padding: 10px;
+        max-height: 70vh;
     }
     
     .info-popup-content h2 {
-        font-size: 18px;
+        font-size: 16px;
+        margin: 0 0 12px 0;
     }
     
     .info-section h3 {
-        font-size: 14px;
+        font-size: 13px;
+        margin: 12px 0 6px 0;
     }
     
     .info-section p {
-        font-size: 13px;
+        font-size: 12px;
+        margin: 6px 0;
+        line-height: 1.4;
     }
     
     .info-section li {
-        font-size: 13px;
+        font-size: 12px;
+        margin: 3px 0;
+    }
+    
+    .info-section ul {
+        margin: 6px 0;
+        padding-left: 16px;
+    }
+    
+    .credit {
+        margin-top: 15px;
+        padding-top: 10px;
+    }
+    
+    .credit p {
+        font-size: 11px;
+    }
+    
+    #info-popup-close {
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        font-size: 16px;
     }
 }
 #info-popup.hidden {
@@ -172,6 +225,17 @@ html, body {
     margin: 4px 0;
     font-size: 14px;
     line-height: 1.5;
+}
+.credit {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+}
+.credit p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
 }
 #info-popup-close {
     position: absolute;
