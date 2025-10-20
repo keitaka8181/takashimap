@@ -622,26 +622,26 @@ function doSearch() {
     }
 
     // キーワードで絞り込み
-    if (keyword) {
-        filtered = filtered.filter(m =>
-            (m.properties.recommendedPlace && m.properties.recommendedPlace.toLowerCase().includes(keyword)) ||
-            (m.properties.nickname && m.properties.nickname.toLowerCase().includes(keyword)) ||
-            (m.properties.reason && m.properties.reason.toLowerCase().includes(keyword))
-        );
-    }
+        if (keyword) {
+            filtered = filtered.filter(m =>
+                (m.properties.recommendedPlace && m.properties.recommendedPlace.toLowerCase().includes(keyword)) ||
+                (m.properties.nickname && m.properties.nickname.toLowerCase().includes(keyword)) ||
+                (m.properties.reason && m.properties.reason.toLowerCase().includes(keyword))
+            );
+        }
 
-    // 結果表示
-    searchResults.innerHTML = '';
-    if (filtered.length === 0) {
-        searchResults.innerHTML = '<div style="color:#888;padding:8px;">該当なし</div>';
-        return;
-    }
-    filtered.forEach(marker => {
-        const div = document.createElement('div');
-        div.className = 'search-result-item';
-        div.innerHTML = `<strong>${marker.properties.recommendedPlace}</strong><br><span style="font-size:12px;color:#666;">${marker.properties.nickname}${marker.properties.reason ? ' / ' + marker.properties.reason : ''}</span>`;
-        div.onclick = () => {
-            flyToMarker(marker.coordinates[0], marker.coordinates[1], marker);
+        // 結果表示
+        searchResults.innerHTML = '';
+        if (filtered.length === 0) {
+            searchResults.innerHTML = '<div style="color:#888;padding:8px;">該当なし</div>';
+            return;
+        }
+        filtered.forEach(marker => {
+            const div = document.createElement('div');
+            div.className = 'search-result-item';
+            div.innerHTML = `<strong>${marker.properties.recommendedPlace}</strong><br><span style="font-size:12px;color:#666;">${marker.properties.nickname}${marker.properties.reason ? ' / ' + marker.properties.reason : ''}</span>`;
+            div.onclick = () => {
+                flyToMarker(marker.coordinates[0], marker.coordinates[1], marker);
             searchBox.classList.add('hidden');
         };
         searchResults.appendChild(div);
