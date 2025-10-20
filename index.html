@@ -15,36 +15,29 @@
     <div id="logo">
         <img src="logo.png" alt="高島ロゴ">
     </div>
-    <div id="filter-container" class="compact">
-        <!-- 初期表示のチェックボックスを削除 -->
-    </div>
-    <button id="toggle-arrow" title="カテゴリーを表示/非表示">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+    <div id="info-button" title="プロジェクトについて">
+        <svg width="24" height="24" fill="#333" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="#333" stroke-width="2" fill="none"/>
+            <path d="M12 16v-4" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="8" r="1" fill="#333"/>
         </svg>
-    </button>
-    <div id="info-popup">
-        <div id="info-popup-header">
-            <h3 id="info-popup-title">カテゴリー情報</h3>
+    </div>
+    <div id="info-popup" class="hidden">
+        <div class="info-popup-content">
+            <h2>高島市思い出マップについて</h2>
+            <div class="info-section">
+                <h3>このマップについて</h3>
+                <p>高島市のみなさんの思い出を地図に集めてみました。みんなの記憶を一つの地図にまとめることで、地域のつながりを深められたらいいなと思っています。</p>
+                <p>住民のみなさんに直接お話を聞かせてもらって、こんな情報を集めています：</p>
+                <ul>
+                    <li>思い出の場所</li>
+                    <li>その場所での体験や思い出の内容</li>
+                    <li>体験者のニックネーム（プライバシーは守ります）</li>
+                </ul>
+                <p>このマップを見ることで、世代を超えた交流が生まれて、みんなが高島をもっと好きになってくれたら嬉しいです！</p>
+            </div>
             <button id="info-popup-close">×</button>
         </div>
-        <div id="info-popup-content">
-            <!-- 情報がここに動的に追加されます -->
-        </div>
-    </div>
-    <div id="basemap-switcher" style="position:absolute;top:10px;left:260px;z-index:1100;">
-      <label class="switch">
-        <input type="checkbox" id="basemap-toggle" checked>
-        <span class="slider"></span>
-      </label>
-      <span id="basemap-label" style="margin-left:10px;">衛星画像</span>
-    </div>
-    <div id="recommended-spots-switcher" style="position:absolute;top:10px;left:420px;z-index:1100;">
-      <label class="switch">
-        <input type="checkbox" id="recommended-spots-toggle">
-        <span class="slider"></span>
-      </label>
-      <span id="recommended-spots-label" style="margin-left:10px;">みんなのおすすめ</span>
     </div>
     <div id="search-toggle" title="検索" style="position:absolute;top:10px;right:10px;z-index:1200;">
         <button id="search-icon-btn" style="background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;">
@@ -58,11 +51,37 @@
     <div id="search-box" class="hidden" style="right:10px;left:auto;">
         <div class="search-box-inner">
             <input type="text" id="search-input" placeholder="キーワードで検索" autocomplete="off">
-            <select id="search-category">
-                <option value="">すべてのカテゴリー</option>
-                <!-- カテゴリーはJSで動的に追加 -->
-            </select>
             <button id="search-close-btn" title="閉じる">×</button>
+        </div>
+        <div id="search-categories">
+            <div class="category-option">
+                <input type="radio" id="category-all" name="category" value="" checked>
+                <label for="category-all">すべて</label>
+            </div>
+            <div class="category-option">
+                <input type="radio" id="category-romance" name="category" value="ROMANCE">
+                <label for="category-romance">ROMANCE <span class="category-note">(恋愛・ロマンス)</span></label>
+            </div>
+            <div class="category-option">
+                <input type="radio" id="category-nostalgia" name="category" value="NOSTALGIA">
+                <label for="category-nostalgia">NOSTALGIA <span class="category-note">(懐かしさ・ノスタルジー)</span></label>
+            </div>
+            <div class="category-option">
+                <input type="radio" id="category-fun" name="category" value="FUN">
+                <label for="category-fun">FUN <span class="category-note">(楽しい・面白い)</span></label>
+            </div>
+            <div class="category-option">
+                <input type="radio" id="category-discovery" name="category" value="DISCOVERY">
+                <label for="category-discovery">DISCOVERY <span class="category-note">(発見・気づき)</span></label>
+            </div>
+            <div class="category-option">
+                <input type="radio" id="category-adventure" name="category" value="ADVENTURE">
+                <label for="category-adventure">ADVENTURE <span class="category-note">(冒険・挑戦)</span></label>
+            </div>
+            <div class="category-option">
+                <input type="radio" id="category-other" name="category" value="その他">
+                <label for="category-other">その他</label>
+            </div>
         </div>
         <div id="search-results"></div>
     </div>
