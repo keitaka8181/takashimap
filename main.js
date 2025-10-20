@@ -4,65 +4,21 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiZ2dwbGF5ZXIiLCJhIjoiY200OXBzcmI1MGR6bzJxcTFrd
 const SATELLITE_STYLE = 'mapbox://styles/mapbox/satellite-streets-v12';
 const STREETS_STYLE = 'mapbox://styles/mapbox/streets-v11';
 
-// マップ初期化関数
-function initializeMap() {
-    console.log('Initializing map...');
-    
-    // Mapインスタンスをグローバル(window)にする
-    window.map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/satellite-streets-v12', // サテライトを初期表示
-        projection: 'globe',
-        zoom: 4,
-        center: [138, 36],
-        antialias: true,
-        preserveDrawingBuffer: true
-    });
+// Mapインスタンスをグローバル(window)にする
+window.map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/satellite-streets-v12', // サテライトを初期表示
+    projection: 'globe',
+    zoom: 4,
+    center: [138, 36]
+});
 
-    // マップの読み込み状態をデバッグ
-    map.on('load', () => {
-        console.log('✅ Map loaded successfully');
-    });
-
-    map.on('error', (e) => {
-        console.error('❌ Map error:', e);
-        // エラーが発生した場合、スタイルを再読み込み
-        setTimeout(() => {
-            console.log('Retrying map style load...');
-            map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
-        }, 1000);
-    });
-
-    map.on('style.load', () => {
-        console.log('✅ Map style loaded successfully');
-    });
-    
-    // スタイル読み込みのタイムアウト設定
-    setTimeout(() => {
-        if (!map.isStyleLoaded()) {
-            console.warn('Style load timeout, retrying...');
-            map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
-        }
-    }, 5000);
-
-    map.addControl(new mapboxgl.NavigationControl());
-    
-    return map;
-}
+map.addControl(new mapboxgl.NavigationControl());
 
 // --- ここが重要 ---
 // fetchBoundaryData()の呼び出しはDOMContentLoadedではなく、必ず「map.on('style.load', ...)」の中で一度だけ呼ぶ
 let boundaryLoaded = false;
-
-// マップの初期化とイベント設定
-function setupMapEvents() {
-    if (!window.map) {
-        console.error('Map not initialized');
-        return;
-    }
-    
-    map.on('style.load', () => {
-    console.log('✅ Style loaded, initializing map features');
+map.on('style.load', () => {
     map.setFog({});
     // ラベルレイヤーを非表示にする
     map.getStyle().layers.forEach(layer => {
@@ -106,8 +62,7 @@ function setupMapEvents() {
             console.error('❌ Failed to re-initialize recommended spots layer:', error);
         }
     }
-    });
-}
+});
 
 function loadIconsAndAddLayer() {
     const iconFiles = [
@@ -603,6 +558,7 @@ const searchResults = document.getElementById('search-results');
 // 検索ボックスを開く
 searchIconBtn.addEventListener('click', () => {
     searchBox.classList.remove('hidden');
+    document.body.classList.add('search-open'); // スマホ対応のクラス追加
     searchInput.focus();
     // 検索ボックスを開いたら最初からすべての思い出を表示
     document.getElementById('category-all').checked = true; // すべてを選択
@@ -612,6 +568,7 @@ searchIconBtn.addEventListener('click', () => {
 // 閉じる
 searchCloseBtn.addEventListener('click', () => {
     searchBox.classList.add('hidden');
+    document.body.classList.remove('search-open'); // スマホ対応のクラス削除
     searchInput.value = '';
     searchResults.innerHTML = '';
 });
@@ -727,14 +684,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    // 検索ボックス外をクリックで閉じる（スマホ対応）
+    document.addEventListener('click', (e) => {
+        if (!searchBox.classList.contains('hidden') && 
+            !searchBox.contains(e.target) && 
+            !searchIconBtn.contains(e.target)) {
+            searchBox.classList.add('hidden');
+            document.body.classList.remove('search-open');
+            searchInput.value = '';
+            searchResults.innerHTML = '';
+        }
+    });
 });
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded - Starting initialization');
-    
-    // マップを初期化
-    initializeMap();
-    setupMapEvents();
     
     // ラジオボタンの変更イベントを設定
     const searchCategories = document.querySelectorAll('input[name="category"]');
