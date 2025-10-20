@@ -466,18 +466,25 @@ html, body {
 
 @media (max-width: 480px) {
     #search-results {
-        max-height: calc(100vh - 160px);
-        min-height: 100px;
+        max-height: calc(100vh - 220px);
+        min-height: 80px;
     }
 }
 .search-result-item {
-    padding: 12px 8px;
+    padding: 10px 8px;
     border-bottom: 1px solid #eee;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     color: #222;
     background: none;
     transition: background 0.15s;
+}
+
+@media (max-width: 480px) {
+    .search-result-item {
+        padding: 8px 6px;
+        font-size: 13px;
+    }
 }
 .search-result-item:last-child {
     border-bottom: none;
