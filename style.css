@@ -315,7 +315,7 @@ html, body {
         right: 0;
         width: 100%;
         min-width: auto;
-        max-width: none;
+        max-width: 100%;
         border-radius: 0;
         padding: 15px 12px 12px 12px;
         box-sizing: border-box;
@@ -331,11 +331,6 @@ html, body {
     #search-input {
         width: 100%;
         box-sizing: border-box;
-    }
-    
-    #search-categories {
-        padding: 8px;
-        margin: 8px 0;
     }
 }
 
@@ -471,25 +466,18 @@ html, body {
 
 @media (max-width: 480px) {
     #search-results {
-        max-height: calc(100vh - 220px);
-        min-height: 80px;
+        max-height: calc(100vh - 160px);
+        min-height: 100px;
     }
 }
 .search-result-item {
-    padding: 10px 8px;
+    padding: 12px 8px;
     border-bottom: 1px solid #eee;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
     color: #222;
     background: none;
     transition: background 0.15s;
-}
-
-@media (max-width: 480px) {
-    .search-result-item {
-        padding: 8px 6px;
-        font-size: 13px;
-    }
 }
 .search-result-item:last-child {
     border-bottom: none;
