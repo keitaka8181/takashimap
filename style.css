@@ -28,6 +28,41 @@ html, body {
     right: auto;
     z-index: 1000;
 }
+
+/* スマホ対応 - ロゴとボタン */
+@media (max-width: 768px) {
+    #logo img {
+        width: 120px;
+    }
+    
+    #info-button {
+        left: 140px;
+        width: 32px;
+        height: 32px;
+    }
+    
+    #info-button svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    #logo img {
+        width: 100px;
+    }
+    
+    #info-button {
+        left: 110px;
+        width: 30px;
+        height: 30px;
+    }
+    
+    #info-button svg {
+        width: 18px;
+        height: 18px;
+    }
+}
 #logo img {
     width: 150px;
     height: auto;
@@ -62,6 +97,7 @@ html, body {
     top: 50px;
     left: 10px;
     width: 400px;
+    max-width: calc(100vw - 20px);
     max-height: 80vh;
     background: rgba(255, 255, 255, 0.98);
     border-radius: 8px;
@@ -70,6 +106,43 @@ html, body {
     overflow-y: auto;
     color: #333;
     padding: 20px;
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+    #info-popup {
+        top: 60px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-width: none;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    #info-popup {
+        top: 50px;
+        left: 5px;
+        right: 5px;
+        padding: 12px;
+    }
+    
+    .info-popup-content h2 {
+        font-size: 18px;
+    }
+    
+    .info-section h3 {
+        font-size: 14px;
+    }
+    
+    .info-section p {
+        font-size: 13px;
+    }
+    
+    .info-section li {
+        font-size: 13px;
+    }
 }
 #info-popup.hidden {
     display: none;
@@ -169,6 +242,41 @@ html, body {
     flex-direction: column;
     gap: 12px;
     transition: opacity 0.2s, visibility 0.2s;
+}
+
+/* スマホ対応 - 検索ボックス */
+@media (max-width: 768px) {
+    #search-box {
+        left: 0;
+        right: 0;
+        width: 100%;
+        min-width: auto;
+        max-width: none;
+        border-radius: 0;
+        padding: 20px 15px 16px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    #search-box {
+        padding: 15px 10px 12px 10px;
+    }
+    
+    #search-categories {
+        padding: 10px;
+    }
+    
+    .category-option {
+        margin: 6px 0;
+    }
+    
+    .category-option label {
+        font-size: 13px;
+    }
+    
+    .category-note {
+        font-size: 11px;
+    }
 }
 #search-box.hidden {
     display: none;
