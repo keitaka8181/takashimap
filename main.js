@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // ...existing code from <script>...</script> in index.html...
 mapboxgl.accessToken = 'pk.eyJ1IjoiZ2dwbGF5ZXIiLCJhIjoiY200OXBzcmI1MGR6bzJxcTFrdDJ1MGJyNSJ9.o_VpEScSsAPdt8U8PDB58Q';
 
@@ -22,6 +23,22 @@ window.map = new mapboxgl.Map({
     maxTileCacheSize: 50,
     // タッチ操作の感度調整
     touchAction: 'pan-x pan-y'
+=======
+
+// ...existing code from <script>...</script> in index.html...
+mapboxgl.accessToken = 'pk.eyJ1IjoiZ2dwbGF5ZXIiLCJhIjoiY200OXBzcmI1MGR6bzJxcTFrdDJ1MGJyNSJ9.o_VpEScSsAPdt8U8PDB58Q';
+
+const SATELLITE_STYLE = 'mapbox://styles/mapbox/satellite-streets-v12';
+const STREETS_STYLE = 'mapbox://styles/mapbox/streets-v11';
+
+// Mapインスタンスをグローバル(window)にする
+window.map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/satellite-streets-v12', // サテライトを初期表示
+    projection: 'globe',
+    zoom: 4,
+    center: [138, 36]
+>>>>>>> a09663c (connect)
 });
 
 map.addControl(new mapboxgl.NavigationControl());
@@ -60,11 +77,19 @@ map.on('style.load', () => {
                     source: 'recommended-spots',
                     layout: {
                         'icon-image': ['get', 'icon'],
+<<<<<<< HEAD
                         'icon-size': 0.1, // 小さめに
                         'icon-allow-overlap': true
                     },
                     paint: {
                         'icon-opacity': 0
+=======
+                        'icon-size': 0.08, // さらに小さく
+                        'icon-allow-overlap': true
+                    },
+                    paint: {
+                        'icon-opacity': 1
+>>>>>>> a09663c (connect)
                     }
                 });
             }
@@ -77,7 +102,11 @@ map.on('style.load', () => {
 
 function loadIconsAndAddLayer() {
     const iconFiles = [
+<<<<<<< HEAD
         // みんなのおすすめスポット用のアイコン
+=======
+        // みんなのおすすめスポット用のアイコンのみ
+>>>>>>> a09663c (connect)
         { name: 'mayor-icon', url: '市長.png' },
         { name: 'male-icon', url: '男性.png' },
         { name: 'female-icon', url: '女性.png' },
@@ -105,6 +134,7 @@ function loadIconsAndAddLayer() {
             }
             loaded++;
             if (loaded === iconFiles.length) {
+<<<<<<< HEAD
                 // ジャンル用のソースとレイヤーを再追加
                 try {
                     if (!map.getSource('genre-markers')) {
@@ -140,6 +170,9 @@ function loadIconsAndAddLayer() {
                     console.error('❌ genre-marker-layer追加失敗', e);
                 }
                 
+=======
+                // ソースとレイヤーを再追加（おすすめのみ）
+>>>>>>> a09663c (connect)
                 // みんなのおすすめスポットのソースとレイヤーを再追加
                 try {
                     if (!map.getSource('recommended-spots')) {
@@ -163,17 +196,29 @@ function loadIconsAndAddLayer() {
                                 'icon-size': [
                                     'match',
                                     ['get', 'icon'],
+<<<<<<< HEAD
                         'mayor-icon', 0.15,
                         'male-icon', 0.15,
                         'female-icon', 0.15,
                         'grandfather-icon', 0.15,
                         'grandmother-icon', 0.15,
+=======
+                                    'mayor-icon', 0.13,
+                                    'male-icon', 0.13,
+                                    'female-icon', 0.13,
+                                    'grandfather-icon', 0.13,
+                                    'grandmother-icon', 0.13,
+>>>>>>> a09663c (connect)
                                     0.2
                                 ],
                                 'icon-allow-overlap': true
                             },
                             paint: {
+<<<<<<< HEAD
                                 'icon-opacity': 1 // デフォルト表示に変更
+=======
+                                'icon-opacity': 1
+>>>>>>> a09663c (connect)
                             }
                         });
                         console.log('✅ recommended-spots-layer追加');
@@ -230,6 +275,7 @@ const recommendedSpotsSpreadsheetId = '1kshDopEBMw-7chK-TyV8_vp9Qhwe25ScoZ-BYmIJ
 const recommendedSpotsSheetName = 'おすすめスポット'; // 正しいシート名
 
 let data = {};
+<<<<<<< HEAD
 let genreMarkers = []; // markersをgenreMarkersに変更
 let recommendedSpotsMarkers = [];
 let genres = new Set(); // categoriesをgenresに変更
@@ -238,6 +284,15 @@ let lastGenreMarkersGeoJson = null; // lastMarkersGeoJsonをlastGenreMarkersGeoJ
 let lastRecommendedSpotsGeoJson = null;
 // みんなのおすすめスポットは常に表示（トグル機能削除）
 let recommendedSpotsVisible = true; // 常に表示
+=======
+let markers = [];
+let recommendedSpotsMarkers = [];
+let categories = new Set();
+let boundaryGeoJson = null;
+let lastMarkersGeoJson = null;
+let lastRecommendedSpotsGeoJson = null;
+let recommendedSpotsVisible = false; // おすすめスポットの表示状態を管理
+>>>>>>> a09663c (connect)
 
 async function fetchData(sheetName) {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
@@ -297,6 +352,7 @@ async function fetchRecommendedSpotsData() {
     }
 }
 
+<<<<<<< HEAD
 // ジャンル名から英単語を抽出する関数
 function extractEnglishFromGenre(genre) {
     // 英単語のみを抽出する正規表現
@@ -374,6 +430,20 @@ function loadIcons() {
         { name: 'female-icon', url: '女性.png' },
         { name: 'grandfather-icon', url: 'おじいちゃん.png' },
         { name: 'grandmother-icon', url: 'おばあちゃん.png' }
+=======
+// 観光カテゴリー定義は廃止
+
+// アイコンを読み込む関数
+function loadIcons() {
+    const iconFiles = [
+        { name: 'mountain-icon', url: 'mountain.png' },
+        { name: 'camp-icon', url: 'camp.png' },
+        { name: 'kankochi-icon', url: 'kankochi.png' },
+        { name: 'event-icon', url: 'event.png' },
+        { name: 'shrine-icon', url: 'shrine.png' },
+        { name: 'hotel-icon', url: 'hotel.png' },
+        { name: 'food-icon', url: 'food.png' }
+>>>>>>> a09663c (connect)
     ];
 
     iconFiles.forEach(icon => {
@@ -390,6 +460,7 @@ function loadIcons() {
 }
 
 async function init() {
+<<<<<<< HEAD
     // アイコンを読み込む
     loadIcons();
     
@@ -487,6 +558,75 @@ function updateRecommendedSpotsFilter() {
             features: filteredFeatures
         });
     }
+=======
+    // 観光（通常マーカー）は廃止
+
+    map.on('load', () => {
+        // アイコンを読み込む
+        loadIcons();
+        
+        // 既存の観光マーカー関連のレイヤー・イベントは作成しない
+
+        // クリックでおすすめポップアップを閉じる
+        map.on('click', (e) => {
+            const recommendedFeatures = map.queryRenderedFeatures(e.point, { layers: ['recommended-spots-layer'] });
+            if (recommendedFeatures.length === 0) {
+                recommendedSpotsPopup.remove();
+                isRecommendedSpotsPopupFixed = false;
+            }
+        });
+
+        // みんなのおすすめスポット用のポップアップ
+        const recommendedSpotsPopup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false });
+        let isRecommendedSpotsPopupFixed = false;
+
+        map.on('mouseenter', 'recommended-spots-layer', (e) => {
+            map.getCanvas().style.cursor = 'pointer';
+            if (!isRecommendedSpotsPopupFixed) {
+                const features = map.queryRenderedFeatures(e.point, { layers: ['recommended-spots-layer'] });
+                if (features.length > 0) {
+                    const feature = features[0];
+                    const coordinates = feature.geometry.coordinates.slice();
+                    const properties = feature.properties;
+                    const html = `
+                        <div class="popup">
+                            <h3>${properties.recommendedPlace}</h3>
+                            <p><strong>${properties.nickname}</strong>のおすすめ</p>
+                            ${properties.reason ? `<p>${properties.reason}</p>` : ''}
+                        </div>
+                    `;
+                    recommendedSpotsPopup.setLngLat(coordinates).setHTML(html).addTo(map);
+                }
+            }
+        });
+
+        map.on('mouseleave', 'recommended-spots-layer', () => {
+            map.getCanvas().style.cursor = '';
+            if (!isRecommendedSpotsPopupFixed) recommendedSpotsPopup.remove();
+        });
+
+        map.on('click', 'recommended-spots-layer', (e) => {
+            const features = map.queryRenderedFeatures(e.point, { layers: ['recommended-spots-layer'] });
+            if (features.length > 0) {
+                const feature = features[0];
+                const coordinates = feature.geometry.coordinates.slice();
+                const properties = feature.properties;
+                const html = `
+                    <div class="popup">
+                        <h3>${properties.recommendedPlace}</h3>
+                        <p><strong>${properties.nickname}</strong>のおすすめ</p>
+                        ${properties.reason ? `<p>${properties.reason}</p>` : ''}
+                    </div>
+                `;
+                recommendedSpotsPopup.remove();
+                recommendedSpotsPopup.setLngLat(coordinates).setHTML(html).addTo(map);
+                isRecommendedSpotsPopupFixed = true;
+            }
+        });
+
+        // カテゴリーフィルター機能を削除 - 思い出マップ用に簡素化
+    });
+>>>>>>> a09663c (connect)
 }
 
 // みんなのおすすめスポットの初期化
@@ -497,22 +637,36 @@ async function initRecommendedSpots() {
     if (!points || points.length === 0) {
         console.log('Using dummy data for testing - API access failed or no data available');
         points = [
+<<<<<<< HEAD
             ['タイムスタンプ', 'ニックネーム', 'おすすめの場所', '理由', '座標', 'アイコン', 'グルメ'], // ヘッダー行
             ['2025-01-01', 'けんた', '高島市市役所', '７月２３日麗澤大学と高島市の協定調印式！', '35.353044, 136.035733', '市長', '体験'],
             ['2025-01-01', 'テストユーザー', '琵琶湖', '美しい湖の景色', '35.377868, 135.946352', '男性', '景色'],
             ['2025-01-01', '地元の方', 'マキノサニービーチ', '夏の海水浴場として人気', '35.416667, 136.016667', '女性', ''],
             ['2025-01-01', '観光客', '高島市観光案内所', '観光情報が充実', '35.353044, 136.035733', 'おじいちゃん', 'グルメ']
+=======
+            ['2025-01-01', 'けんた', '高島市市役所', '７月２３日麗澤大学と高島市の協定調印式！', '35.353044, 136.035733', '市長'],
+            ['2025-01-01', 'テストユーザー', '琵琶湖', '美しい湖の景色', '35.377868, 135.946352', '男性'],
+            ['2025-01-01', '地元の方', 'マキノサニービーチ', '夏の海水浴場として人気', '35.416667, 136.016667', '女性'],
+            ['2025-01-01', '観光客', '高島市観光案内所', '観光情報が充実', '35.353044, 136.035733', 'おじいちゃん']
+>>>>>>> a09663c (connect)
         ];
     }
 
     recommendedSpotsMarkers = [];
+<<<<<<< HEAD
     genres.clear(); // ジャンルセットをクリア
+=======
+>>>>>>> a09663c (connect)
 
     points.forEach((point, index) => {
         // ヘッダー行をスキップ
         if (index === 0) return;
         
+<<<<<<< HEAD
         const [timestamp, nickname, recommendedPlace, reason, coordinates, icon, genreFromSheet] = point;
+=======
+        const [timestamp, nickname, recommendedPlace, reason, coordinates, icon, genre] = point;
+>>>>>>> a09663c (connect)
         
         if (!coordinates || !recommendedPlace) return;
         
@@ -529,10 +683,13 @@ async function initRecommendedSpots() {
         
         if (isNaN(lat) || isNaN(lon)) return;
         
+<<<<<<< HEAD
         // ジャンルの処理（G列から取得、空白の場合は「その他」）
         let genre = (genreFromSheet && genreFromSheet.trim()) ? genreFromSheet.trim() : 'その他';
         genres.add(genre); // ジャンルをセットに追加
         
+=======
+>>>>>>> a09663c (connect)
         // アイコン名を決定
         let iconName = 'mayor-icon'; // デフォルト
         if (icon) {
@@ -568,7 +725,11 @@ async function initRecommendedSpots() {
                 recommendedPlace: recommendedPlace,
                 reason: reason || '',
                 icon: iconName,
+<<<<<<< HEAD
                 genre: genre // ジャンル情報を追加
+=======
+                genre: genre || '' // G列のジャンル情報
+>>>>>>> a09663c (connect)
             }
         });
     });
@@ -582,6 +743,7 @@ async function initRecommendedSpots() {
         }))
     };
 
+<<<<<<< HEAD
     // ジャンルスタイルを更新
     updateGenreStyles();
     
@@ -589,6 +751,9 @@ async function initRecommendedSpots() {
     generateGenreButtons();
 
     // ソースとレイヤーを追加（デフォルト表示）
+=======
+        // ソースとレイヤーを追加（初期状態では非表示）
+>>>>>>> a09663c (connect)
     try {
         if (map.getSource('recommended-spots')) {
             map.getSource('recommended-spots').setData(lastRecommendedSpotsGeoJson);
@@ -606,6 +771,7 @@ async function initRecommendedSpots() {
                 source: 'recommended-spots',
                 layout: {
                     'icon-image': ['get', 'icon'],
+<<<<<<< HEAD
                     'icon-size': [
                         'match',
                         ['get', 'icon'],
@@ -684,6 +850,16 @@ async function initRecommendedSpots() {
             }
         });
         
+=======
+                    'icon-size': 0.12,
+                    'icon-allow-overlap': true
+                },
+                paint: {
+                    'icon-opacity': 1
+                }
+            });
+        }
+>>>>>>> a09663c (connect)
         console.log('✅ Recommended spots layer initialized successfully');
     } catch (error) {
         console.error('❌ Failed to initialize recommended spots layer:', error);
@@ -732,6 +908,7 @@ async function fetchBoundaryData() {
     }
 }
 
+<<<<<<< HEAD
 // 古い矢印ボタンのイベントは削除（新しいレイアウトでは不要）
 
 // 情報ポップアップを表示する関数
@@ -760,6 +937,11 @@ function hideInfoPopup() {
     const infoPopup = document.getElementById('info-popup');
     infoPopup.classList.remove('show');
 }
+=======
+// 矢印ボタンのイベントリスナーを削除 - カテゴリーフィルター機能を削除
+
+// 情報ポップアップ機能を削除 - 思い出マップ用に簡素化
+>>>>>>> a09663c (connect)
 
 // マーカーに飛ぶ関数
 window.flyToMarker = function(lon, lat, markerData = null) {
@@ -785,6 +967,7 @@ window.flyToMarker = function(lon, lat, markerData = null) {
     }
 };
 
+<<<<<<< HEAD
 // ポップアップの閉じるボタンのイベントリスナー
 document.getElementById('info-popup-close').addEventListener('click', hideInfoPopup);
 
@@ -895,16 +1078,191 @@ function optimizeMobileUI() {
         });
     });
 }
+=======
+// ポップアップの閉じるボタンのイベントリスナーを削除 - 情報ポップアップ機能を削除
+
+// ベースマップ切り替え機能を削除 - 航空写真オンリー
+
+// みんなのおすすめスポットのトグル機能を削除 - 思い出マップ用に簡素化
+
+// カテゴリーフィルター機能を削除 - 思い出マップ用に簡素化
+
+// 検索UIの表示・非表示
+const searchToggle = document.getElementById('search-toggle');
+const searchBox = document.getElementById('search-box');
+const searchIconBtn = document.getElementById('search-icon-btn');
+const searchCloseBtn = document.getElementById('search-close-btn');
+const searchInput = document.getElementById('search-input');
+// ラジオボタンに変更
+const searchCategories = document.querySelectorAll('input[name="category"]');
+const searchResults = document.getElementById('search-results');
+
+// 検索ボックスを開く
+searchIconBtn.addEventListener('click', () => {
+    searchBox.classList.remove('hidden');
+    document.body.classList.add('search-open'); // スマホ対応のクラス追加
+    searchInput.focus();
+    // 検索ボックスを開いたら最初からすべての思い出を表示
+    document.getElementById('category-all').checked = true; // すべてを選択
+    searchInput.value = ''; // キーワードをクリア
+    doSearch(); // 検索実行してすべて表示
+});
+// 閉じる
+searchCloseBtn.addEventListener('click', () => {
+    searchBox.classList.add('hidden');
+    document.body.classList.remove('search-open'); // スマホ対応のクラス削除
+    searchInput.value = '';
+    searchResults.innerHTML = '';
+});
+
+// カテゴリマッチング関数
+function isCategoryMatch(text, categories) {
+    const categoryKeywords = {
+        'ROMANCE': ['恋人', 'キス', '手をつなぐ', 'デート', '愛', 'ロマンス', 'カップル', '二人', '一緒', '想い出'],
+        'NOSTALGIA': ['子供', '昔', '懐かしい', '幼い', '家族', '学校', '遊び場', '思い出', '懐かし', '古い'],
+        'FUN': ['笑', '楽しい', '面白', '冒険', '夏祭り', 'イベント', '祭り', '盛り上が', 'ワクワク', '興奮'],
+        'DISCOVERY': ['初めて', '発見', '感動', '驚き', '新しい', '知らなかった', '初体験', '目から鱗', '気づき'],
+        'ADVENTURE': ['迷子', '道に迷', 'チャレンジ', '挑戦', '困難', '道なき道', '冒険', '未知', '探検', '踏み出']
+    };
+    
+    for (const category of categories) {
+        const keywords = categoryKeywords[category] || [];
+        for (const keyword of keywords) {
+            if (text.includes(keyword)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// 検索処理
+function doSearch() {
+    const keyword = searchInput.value.trim().toLowerCase();
+    const selectedCategory = document.querySelector('input[name="category"]:checked');
+    const categoryValue = selectedCategory ? selectedCategory.value : '';
+
+    console.log('検索実行:', { keyword, categoryValue, selectedCategory });
+
+    let filtered = recommendedSpotsMarkers;
+
+    // カテゴリで絞り込み（空文字はすべて）
+    if (categoryValue) {
+        console.log('カテゴリフィルタ適用:', categoryValue);
+        filtered = filtered.filter(m => {
+            const reason = m.properties.reason || '';
+            const place = m.properties.recommendedPlace || '';
+            const text = (reason + ' ' + place).toLowerCase();
+            
+            if (categoryValue === 'その他') {
+                // その他: どのカテゴリにも該当しないもの
+                return !isCategoryMatch(text, ['ROMANCE', 'NOSTALGIA', 'FUN', 'DISCOVERY', 'ADVENTURE']);
+            } else {
+                // 指定されたカテゴリと一致
+                return isCategoryMatch(text, [categoryValue]);
+            }
+        });
+        console.log('フィルタ後件数:', filtered.length);
+    }
+
+    // キーワードで絞り込み
+        if (keyword) {
+            filtered = filtered.filter(m =>
+                (m.properties.recommendedPlace && m.properties.recommendedPlace.toLowerCase().includes(keyword)) ||
+                (m.properties.nickname && m.properties.nickname.toLowerCase().includes(keyword)) ||
+                (m.properties.reason && m.properties.reason.toLowerCase().includes(keyword))
+            );
+        }
+
+        // 結果表示
+        searchResults.innerHTML = '';
+        if (filtered.length === 0) {
+            searchResults.innerHTML = '<div style="color:#888;padding:8px;">該当なし</div>';
+            return;
+        }
+        filtered.forEach(marker => {
+            const div = document.createElement('div');
+            div.className = 'search-result-item';
+            div.innerHTML = `<strong>${marker.properties.recommendedPlace}</strong><br><span style="font-size:12px;color:#666;">${marker.properties.nickname}${marker.properties.reason ? ' / ' + marker.properties.reason : ''}</span>`;
+            div.onclick = () => {
+                flyToMarker(marker.coordinates[0], marker.coordinates[1], marker);
+            searchBox.classList.add('hidden');
+        };
+        searchResults.appendChild(div);
+    });
+}
+
+// 「みんなのおすすめ一覧」ボタンのイベント
+// recommendedListBtn.onclick = () => {
+//     // 一覧表示
+//     searchCategory.value = '__recommended__';
+//     searchInput.value = '';
+//     doSearch();
+//     searchBox.classList.remove('hidden');
+// };
+
+// 入力イベント
+searchInput.addEventListener('input', doSearch);
+
+// インフォメーションボタンの動作
+document.addEventListener('DOMContentLoaded', () => {
+    const infoButton = document.getElementById('info-button');
+    const infoPopup = document.getElementById('info-popup');
+    const infoCloseBtn = document.getElementById('info-popup-close');
+    
+    if (infoButton && infoPopup && infoCloseBtn) {
+        infoButton.addEventListener('click', () => {
+            infoPopup.classList.toggle('hidden');
+        });
+        
+        infoCloseBtn.addEventListener('click', () => {
+            infoPopup.classList.add('hidden');
+        });
+        
+        // ポップアップ外をクリックで閉じる
+        infoPopup.addEventListener('click', (e) => {
+            if (e.target === infoPopup) {
+                infoPopup.classList.add('hidden');
+            }
+        });
+    }
+    
+    // 検索ボックス外をクリックで閉じる（スマホ対応）
+    document.addEventListener('click', (e) => {
+        if (!searchBox.classList.contains('hidden') && 
+            !searchBox.contains(e.target) && 
+            !searchIconBtn.contains(e.target)) {
+            searchBox.classList.add('hidden');
+            document.body.classList.remove('search-open');
+            searchInput.value = '';
+            searchResults.innerHTML = '';
+        }
+    });
+});
+>>>>>>> a09663c (connect)
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded - Starting initialization');
     
+<<<<<<< HEAD
     // モバイル対応の初期化
     setupMobileTouchHandlers();
     optimizeMobileUI();
     
     // 検索機能の初期化
     setupSearchFunctionality();
+=======
+    // ラジオボタンの変更イベントを設定
+    const searchCategories = document.querySelectorAll('input[name="category"]');
+    console.log('ラジオボタン数:', searchCategories.length);
+    
+    searchCategories.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            console.log('ラジオボタン変更:', e.target.value);
+            doSearch();
+        });
+    });
+>>>>>>> a09663c (connect)
     
     // 初期化を順次実行
     init().then(() => {
@@ -913,6 +1271,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return initRecommendedSpots();
     }).then(() => {
         console.log('Recommended spots init completed');
+<<<<<<< HEAD
+=======
+        // トグルスイッチ機能を削除 - 思い出マップ用に簡素化
+>>>>>>> a09663c (connect)
         // 両方の初期化が完了してから高島市に移動
         setTimeout(highlightTakasima, 2000);
     }).catch(error => {

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* Googleマップ風のレイアウト */
 body {
     margin: 0;
@@ -248,11 +249,210 @@ body {
 }
 
 #info-popup-close {
+=======
+/* ...existing style code from <style>...</style> in index.html... */
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #2C2C2C;
+    color: #D3D3D3;
+    overflow-x: hidden; /* 横スクロールバーを消す */
+    position: relative;
+}
+html, body {
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+    position: relative;
+}
+#map {
+    flex: 1;
+    width: 100vw;      /* 横幅を常に100vwに */
+    min-width: 0;      /* はみ出し防止 */
+    height: 100%;
+    box-sizing: border-box;
+}
+#logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: auto;
+    z-index: 1000;
+}
+
+/* スマホ対応 - ロゴとボタン */
+@media (max-width: 768px) {
+    #logo img {
+        width: 120px;
+    }
+    
+    #info-button {
+        left: 140px;
+        width: 32px;
+        height: 32px;
+    }
+    
+    #info-button svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    #logo img {
+        width: 100px;
+    }
+    
+    #info-button {
+        left: 110px;
+        width: 30px;
+        height: 30px;
+    }
+    
+    #info-button svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+#logo img {
+    width: 150px;
+    height: auto;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
+#info-button {
+    position: absolute;
+    top: 10px;
+    left: 170px;
+    z-index: 1000;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+#info-button:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+}
+#info-popup {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    width: 400px;
+    max-width: calc(100vw - 20px);
+    max-height: 80vh;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1002;
+    overflow-y: auto;
+    color: #333;
+    padding: 20px;
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+    #info-popup {
+        top: 60px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-width: none;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    #info-popup {
+        top: 50px;
+        left: 5px;
+        right: 5px;
+        padding: 12px;
+    }
+    
+    .info-popup-content h2 {
+        font-size: 18px;
+    }
+    
+    .info-section h3 {
+        font-size: 14px;
+    }
+    
+    .info-section p {
+        font-size: 13px;
+    }
+    
+    .info-section li {
+        font-size: 13px;
+    }
+    
+    .credit p {
+        font-size: 12px;
+    }
+}
+#info-popup.hidden {
+    display: none;
+}
+.info-popup-content h2 {
+    margin: 0 0 16px 0;
+    font-size: 20px;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 8px;
+}
+.info-section h3 {
+    margin: 16px 0 8px 0;
+    font-size: 16px;
+    color: #555;
+}
+.info-section p {
+    margin: 8px 0;
+    line-height: 1.6;
+    font-size: 14px;
+}
+.info-section ul {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+.info-section li {
+    margin: 4px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.credit {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+}
+.credit p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+}
+#info-popup-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+>>>>>>> a09663c (connect)
     background: none;
     border: none;
     font-size: 20px;
     cursor: pointer;
     color: #666;
+<<<<<<< HEAD
     padding: 0;
     width: 24px;
     height: 24px;
@@ -406,3 +606,234 @@ body {
         min-width: 10vw;
     }
 }
+=======
+    padding: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+#info-popup-close:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+/* カテゴリーフィルター機能を削除 - 思い出マップ用に簡素化 */
+/* カテゴリー関連のスタイルを削除 */
+.popup {
+    background: white;
+    color: black;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    max-width: 200px;
+}
+.popup h3 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+}
+.popup p {
+    margin: 0;
+    font-size: 12px;
+}
+/* カテゴリーボタン関連のスタイルを削除 */
+/* 情報ポップアップ関連のスタイルを削除 */
+/* スイッチ関連のスタイルを削除 - トグル機能を削除 */
+
+/* みんなのおすすめスポットのアイコンを丸くする */
+.mapboxgl-marker img {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+}
+#search-box {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: auto;
+    height: 100vh;
+    min-width: 340px;
+    max-width: 420px;
+    width: 100%;
+    z-index: 1201;
+    background: rgba(255,255,255,0.98);
+    border-radius: 0 0 0 8px;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.18);
+    padding: 24px 20px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+/* スマホ対応 - 検索ボックス */
+@media (max-width: 768px) {
+    #search-box {
+        left: 0;
+        right: 0;
+        width: 100vw;
+        min-width: auto;
+        max-width: 100vw;
+        border-radius: 0;
+        padding: 20px 15px 16px 15px;
+        box-sizing: border-box;
+    }
+    
+    /* 検索ボックス表示時にbodyの横スクロールを防ぐ */
+    body.search-open {
+        overflow-x: hidden;
+        width: 100vw;
+        max-width: 100vw;
+    }
+    
+    #map {
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+}
+
+@media (max-width: 480px) {
+    #search-box {
+        padding: 15px 10px 12px 10px;
+    }
+    
+    #search-categories {
+        padding: 10px;
+    }
+    
+    .category-option {
+        margin: 6px 0;
+    }
+    
+    .category-option label {
+        font-size: 13px;
+    }
+    
+    .category-note {
+        font-size: 11px;
+    }
+}
+#search-box.hidden {
+    display: none;
+}
+.search-box-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+#search-input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 15px;
+}
+#search-categories {
+    margin: 12px 0;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.category-option {
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-option input[type="radio"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    accent-color: #007bff;
+}
+
+.category-option label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    margin: 0;
+    flex: 1;
+}
+
+.category-option label:hover {
+    color: #007bff;
+}
+.category-note {
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
+    margin-left: 4px;
+}
+#search-close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #666;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    line-height: 1;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+#search-close-btn:hover {
+    background: #eee;
+}
+#search-results {
+    flex: 1 1 auto;
+    max-height: calc(100vh - 110px);
+    min-height: 120px;
+    overflow-y: auto;
+    margin-top: 0;
+    background: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: none;
+}
+.search-result-item {
+    padding: 12px 8px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    font-size: 16px;
+    color: #222;
+    background: none;
+    transition: background 0.15s;
+}
+.search-result-item:last-child {
+    border-bottom: none;
+}
+.search-result-item:hover {
+    background: #f0f0f0;
+}
+.search-label {
+    position: absolute;
+    left: 44px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.97);
+    color: #333;
+    font-size: 15px;
+    padding: 4px 12px;
+    border-radius: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    transition: opacity 0.18s;
+    z-index: 1;
+}
+#search-icon-btn:hover .search-label,
+#search-icon-btn:focus .search-label {
+    opacity: 1;
+}
+/* ベースマップラベル関連のスタイルを削除 - トグル機能を削除 */
+
+>>>>>>> a09663c (connect)
